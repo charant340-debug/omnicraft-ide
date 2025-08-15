@@ -22,8 +22,8 @@ export const IDELayout: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background font-ui flex flex-col">
-      {/* Top Bar */}
-      <header className="h-12 bg-panel-bg border-b border-border flex items-center justify-between px-4 shadow-panel">
+      {/* Top Bar - Fixed */}
+      <header className="fixed top-0 left-0 right-0 h-12 bg-panel-bg border-b border-border flex items-center justify-between px-4 shadow-panel z-50">
         <div className="flex items-center space-x-4">
           <div className="flex items-center space-x-2">
             <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
@@ -82,26 +82,30 @@ export const IDELayout: React.FC = () => {
         </div>
       </header>
 
-      {/* Main Content */}
-      <div className="flex flex-1 overflow-hidden">
+      {/* Main Content - Account for fixed header */}
+      <div className="flex flex-1 overflow-hidden pt-12">
         {/* File Explorer */}
         {!isExplorerCollapsed && (
-          <div className="w-80 bg-sidebar-bg border-r border-border flex-shrink-0">
+          <div className="w-80 bg-sidebar-bg border-r border-border flex-shrink-0 h-full overflow-hidden">
             <FileExplorer />
           </div>
         )}
 
         {/* Code Editor Area */}
-        <div className="flex-1 bg-editor min-w-0 flex flex-col">
-          <div className="flex-1">
+        <div className="flex-1 bg-editor min-w-0 flex flex-col h-full">
+          <div className="flex-1 overflow-hidden">
             <CodeEditor />
           </div>
-          <OutputPanel />
+          {isOutputVisible && (
+            <div className="h-80 flex-shrink-0">
+              <OutputPanel />
+            </div>
+          )}
         </div>
 
         {/* AI Assistant */}
         {isAIVisible && (
-          <div className="w-96 bg-panel-bg border-l border-border flex-shrink-0">
+          <div className="w-96 bg-panel-bg border-l border-border flex-shrink-0 h-full overflow-hidden">
             <AIAssistant />
           </div>
         )}

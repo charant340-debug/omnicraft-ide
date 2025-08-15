@@ -11,7 +11,8 @@ import {
   X, 
   Sparkle,
   Code,
-  Check
+  Check,
+  Trash
 } from '@phosphor-icons/react';
 
 interface AIMessage {
@@ -30,6 +31,7 @@ export const AIAssistant: React.FC = () => {
     toggleAI, 
     aiMessages, 
     addAIMessage,
+    clearAIMessages,
     activeFileId,
     openFiles,
     updateFileContent
@@ -138,12 +140,31 @@ export const AIAssistant: React.FC = () => {
   return (
     <div className="h-full flex flex-col bg-panel-bg">
       {/* Header */}
-      <div className="px-4 py-3 border-b border-border flex items-center">
+      <div className="px-4 py-3 border-b border-border flex items-center justify-between">
         <div className="flex items-center space-x-2">
           <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
             <Robot size={16} className="text-background" />
           </div>
           <h3 className="font-semibold text-foreground">AI Assistant</h3>
+        </div>
+        <div className="flex items-center space-x-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={clearAIMessages}
+            className="text-muted-foreground hover:text-foreground"
+            title="Clear chat"
+          >
+            <Trash size={16} />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={toggleAI}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            <X size={16} />
+          </Button>
         </div>
       </div>
 

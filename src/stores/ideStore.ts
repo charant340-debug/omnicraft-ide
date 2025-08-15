@@ -62,6 +62,7 @@ export interface IDEState {
   disconnectDevice: () => void;
   toggleAI: () => void;
   addAIMessage: (role: 'user' | 'assistant', content: string, options?: { hasCodeSuggestion?: boolean; codeSuggestion?: string; targetFile?: string }) => void;
+  clearAIMessages: () => void;
   testAI: () => Promise<void>;
 }
 
@@ -337,6 +338,8 @@ export const useIDEStore = create<IDEState>((set, get) => ({
         aiMessages: [...state.aiMessages, message],
       }));
     },
+
+    clearAIMessages: () => set({ aiMessages: [] }),
 
     testAI: async () => {
       const { addAIMessage, activeFileId, openFiles } = get();

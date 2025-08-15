@@ -31,9 +31,9 @@ export const OutputPanel: React.FC = () => {
   };
 
   return (
-    <div className="h-64 bg-terminal border-t border-border flex flex-col">
+    <div className="h-full bg-terminal border-t border-border flex flex-col">
       {/* Header */}
-      <div className="h-8 bg-panel-bg border-b border-border flex items-center justify-between px-3">
+      <div className="h-8 bg-panel-bg border-b border-border flex items-center justify-between px-3 flex-shrink-0">
         <div className="flex items-center space-x-2">
           <Terminal size={14} className="text-muted-foreground" />
           <span className="text-sm font-medium text-foreground">Output</span>
