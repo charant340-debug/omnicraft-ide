@@ -73,7 +73,7 @@ export const AIAssistant: React.FC = () => {
       // Check if the response contains code that can be applied to the current file
       const codeMatch = aiResponse.match(/```[\w]*\n([\s\S]*?)\n```/);
       if (codeMatch && activeFile) {
-        const extractedCode = codeMatch[1];
+        const extractedCode = codeMatch[1].trim(); // Remove leading/trailing whitespace
         addAIMessage('assistant', aiResponse, {
           hasCodeSuggestion: true,
           codeSuggestion: extractedCode,
@@ -198,8 +198,8 @@ export const AIAssistant: React.FC = () => {
                           
                           {/* Code block */}
                           <div className="bg-editor border-x border-b border-border rounded-b-lg">
-                            <pre className="p-6 overflow-x-auto text-sm font-mono leading-relaxed text-foreground">
-                              <code>{message.codeSuggestion}</code>
+                            <pre className="p-6 overflow-x-auto text-sm font-mono leading-relaxed text-foreground whitespace-pre-wrap">
+                              <code>{message.codeSuggestion?.trim()}</code>
                             </pre>
                           </div>
                           
