@@ -34,44 +34,134 @@ export const CodeEditor: React.FC = () => {
   };
 
   const simulateCodeExecution = (code: string, language: string) => {
-    // Extract print statements and simulate output
+    // Enhanced simulation with MicroPython hardware support
     const outputs: string[] = [];
     
     if (language === 'python') {
-      // Handle string literals
-      const stringPrintMatches = code.match(/print\s*\(\s*["'`]([^"'`]*)["'`]\s*\)/g);
-      if (stringPrintMatches) {
-        stringPrintMatches.forEach(match => {
-          const content = match.match(/["'`]([^"'`]*)["'`]/);
-          if (content && content[1]) {
-            outputs.push(content[1]);
-          }
-        });
-      }
+      // Check for hardware-specific imports and operations
+      const lines = code.split('\n');
+      let hasHardwareCode = false;
+      let hasNeopixel = false;
+      let hasMachine = false;
+      let hasTimeDelay = false;
+      let loopCount = 0;
       
-      // Handle variable prints and simple expressions (like loop counters)
-      const variablePrintMatches = code.match(/print\s*\(\s*([^"'`\)]+)\s*\)/g);
-      if (variablePrintMatches) {
-        variablePrintMatches.forEach(match => {
-          const variable = match.match(/print\s*\(\s*([^"'`\)]+)\s*\)/);
-          if (variable && variable[1]) {
-            const varName = variable[1].trim();
-            // Simulate common variable outputs
-            if (varName === 'i' || varName.includes('i')) {
-              // For loop counter i, simulate 0-9
-              for (let i = 0; i < 10; i++) {
-                outputs.push(i.toString());
-              }
-            } else if (varName.match(/^\d+$/)) {
-              // Direct number
-              outputs.push(varName);
-            } else {
-              // Generic variable
-              outputs.push(`${varName}_value`);
+      // Analyze code for hardware components
+      lines.forEach((line) => {
+        const trimmed = line.trim();
+        
+        if (trimmed.includes('from machine import') || trimmed.includes('import machine')) {
+          hasMachine = true;
+          hasHardwareCode = true;
+          outputs.push('>>> Initializing GPIO pins...');
+        }
+        
+        if (trimmed.includes('import neopixel') || trimmed.includes('neopixel.NeoPixel')) {
+          hasNeopixel = true;
+          hasHardwareCode = true;
+          outputs.push('>>> Setting up NeoPixel strip...');
+        }
+        
+        if (trimmed.includes('time.sleep(')) {
+          hasTimeDelay = true;
+        }
+        
+        if (trimmed.includes('for i in range(')) {
+          const rangeMatch = trimmed.match(/range\((\d+)\)/);
+          if (rangeMatch) {
+            loopCount = parseInt(rangeMatch[1]);
+          }
+        }
+        
+        // Handle regular print statements
+        if (trimmed.startsWith('print(')) {
+          const match = trimmed.match(/print\((.*)\)/);
+          if (match) {
+            let content = match[1];
+            content = content.replace(/['"]/g, '');
+            outputs.push(content);
+          }
+        }
+        
+        // Simulate GPIO Pin configuration
+        if (trimmed.includes('Pin(') && trimmed.includes('Pin.OUT')) {
+          const pinMatch = trimmed.match(/Pin\((\d+),\s*Pin\.OUT\)/);
+          if (pinMatch) {
+            outputs.push(`>>> GPIO Pin ${pinMatch[1]} configured as output`);
+          }
+        }
+        
+        // Simulate NeoPixel operations
+        if (trimmed.includes('np[') && trimmed.includes('=')) {
+          const ledMatch = trimmed.match(/np\[(\d+)\]\s*=\s*\((\d+),\s*(\d+),\s*(\d+)\)/);
+          if (ledMatch) {
+            const [, index, r, g, b] = ledMatch;
+            outputs.push(`>>> LED ${index} set to RGB(${r}, ${g}, ${b})`);
+          }
+        }
+        
+        if (trimmed.includes('np.write()')) {
+          outputs.push('>>> NeoPixel buffer written to LEDs');
+        }
+        
+        if (trimmed.includes('np.fill((0, 0, 0))') || trimmed.includes('np.fill((0,0,0))')) {
+          outputs.push('>>> All LEDs turned off');
+        }
+      });
+      
+      // Simulate execution flow for hardware code
+      if (hasHardwareCode && hasNeopixel) {
+        outputs.push('>>> Starting NeoPixel animation...');
+        
+        if (loopCount > 0) {
+          for (let i = 1; i <= Math.min(loopCount, 5); i++) {
+            outputs.push(`>>> Animation cycle ${i}/${loopCount}`);
+            if (hasTimeDelay) {
+              outputs.push('>>> LEDs ON - Colors displayed');
+              outputs.push('>>> LEDs OFF - All cleared');
             }
           }
-        });
+          outputs.push('>>> Animation sequence complete');
+        }
+        
+        if (code.includes('try:') && code.includes('except KeyboardInterrupt:')) {
+          outputs.push('>>> Keyboard interrupt handler ready');
+          outputs.push('>>> Press Ctrl+C to stop execution');
+        }
       }
+      
+      // Handle variable prints and simple expressions (for non-hardware code)
+      if (!hasHardwareCode) {
+        const stringPrintMatches = code.match(/print\s*\(\s*["'`]([^"'`]*)["'`]\s*\)/g);
+        if (stringPrintMatches) {
+          stringPrintMatches.forEach(match => {
+            const content = match.match(/["'`]([^"'`]*)["'`]/);
+            if (content && content[1]) {
+              outputs.push(content[1]);
+            }
+          });
+        }
+        
+        const variablePrintMatches = code.match(/print\s*\(\s*([^"'`\)]+)\s*\)/g);
+        if (variablePrintMatches) {
+          variablePrintMatches.forEach(match => {
+            const variable = match.match(/print\s*\(\s*([^"'`\)]+)\s*\)/);
+            if (variable && variable[1]) {
+              const varName = variable[1].trim();
+              if (varName === 'i' || varName.includes('i')) {
+                for (let i = 0; i < 10; i++) {
+                  outputs.push(i.toString());
+                }
+              } else if (varName.match(/^\d+$/)) {
+                outputs.push(varName);
+              } else {
+                outputs.push(`${varName}_value`);
+              }
+            }
+          });
+        }
+      }
+      
     } else if (language === 'javascript' || language === 'typescript') {
       const consoleMatches = code.match(/console\.log\s*\(\s*["'`]([^"'`]*)["'`]\s*\)/g);
       if (consoleMatches) {
