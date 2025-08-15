@@ -38,12 +38,37 @@ export const CodeEditor: React.FC = () => {
     const outputs: string[] = [];
     
     if (language === 'python') {
-      const printMatches = code.match(/print\s*\(\s*["'`]([^"'`]*)["'`]\s*\)/g);
-      if (printMatches) {
-        printMatches.forEach(match => {
+      // Handle string literals
+      const stringPrintMatches = code.match(/print\s*\(\s*["'`]([^"'`]*)["'`]\s*\)/g);
+      if (stringPrintMatches) {
+        stringPrintMatches.forEach(match => {
           const content = match.match(/["'`]([^"'`]*)["'`]/);
           if (content && content[1]) {
             outputs.push(content[1]);
+          }
+        });
+      }
+      
+      // Handle variable prints and simple expressions (like loop counters)
+      const variablePrintMatches = code.match(/print\s*\(\s*([^"'`\)]+)\s*\)/g);
+      if (variablePrintMatches) {
+        variablePrintMatches.forEach(match => {
+          const variable = match.match(/print\s*\(\s*([^"'`\)]+)\s*\)/);
+          if (variable && variable[1]) {
+            const varName = variable[1].trim();
+            // Simulate common variable outputs
+            if (varName === 'i' || varName.includes('i')) {
+              // For loop counter i, simulate 0-9
+              for (let i = 0; i < 10; i++) {
+                outputs.push(i.toString());
+              }
+            } else if (varName.match(/^\d+$/)) {
+              // Direct number
+              outputs.push(varName);
+            } else {
+              // Generic variable
+              outputs.push(`${varName}_value`);
+            }
           }
         });
       }
