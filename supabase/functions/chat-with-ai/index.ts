@@ -13,19 +13,43 @@ serve(async (req) => {
   }
 
   try {
-    console.log('Testing Gemini API connection...');
+    console.log('Processing chat request...');
     
+    const { message, context } = await req.json();
+    console.log('Message received:', message?.substring(0, 100));
+    
+    if (!message) {
+      return new Response(
+        JSON.stringify({ error: 'Message is required' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
     if (!geminiApiKey) {
       return new Response(
-        JSON.stringify({ error: 'Gemini API key not found in environment' }),
+        JSON.stringify({ error: 'Gemini API key not configured' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log('API key found, making test request to Gemini...');
+    // Create the system prompt with context
+    const systemPrompt = `You are an AI assistant specialized in IoT development, embedded systems, and full-stack web development. You help developers with:
+- Frontend development (React, TypeScript, CSS)
+- Backend development (Node.js, APIs, databases)  
+- Embedded systems programming (Arduino, ESP32, sensors)
+- IoT protocols and connectivity
+- Code debugging and optimization
+- Best practices and architecture advice
 
-    // Simple test request to Gemini
+When providing code, wrap it in markdown code blocks. Keep responses concise but helpful.
+
+Context: ${context || 'Working on an IoT development project'}
+
+User Question: ${message}`;
+
+    console.log('Calling Gemini API...');
+
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`,
       {
@@ -38,49 +62,44 @@ serve(async (req) => {
             {
               parts: [
                 {
-                  text: "Hello, respond with 'Gemini API is working!' if you receive this message."
+                  text: systemPrompt
                 }
               ]
             }
-          ]
+          ],
+          generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: 1000,
+          }
         })
       }
     );
 
     console.log('Gemini response status:', response.status);
-    
-    const responseText = await response.text();
-    console.log('Gemini response body:', responseText);
 
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Gemini API error:', errorText);
       return new Response(
-        JSON.stringify({ 
-          error: `Gemini API returned ${response.status}`,
-          details: responseText
-        }),
+        JSON.stringify({ error: `Gemini API error: ${response.status}` }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const data = JSON.parse(responseText);
-    const aiResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || 'No response text found';
+    const data = await response.json();
+    const aiResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Sorry, I could not generate a response.';
+    
+    console.log('AI response generated successfully, length:', aiResponse.length);
 
     return new Response(
-      JSON.stringify({ 
-        success: true,
-        response: aiResponse,
-        raw_response: data
-      }),
+      JSON.stringify({ response: aiResponse }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error) {
-    console.error('Error testing Gemini API:', error);
+    console.error('Function error:', error);
     return new Response(
-      JSON.stringify({ 
-        error: `Test failed: ${error.message}`,
-        stack: error.stack
-      }),
+      JSON.stringify({ error: `Internal server error: ${error.message}` }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
