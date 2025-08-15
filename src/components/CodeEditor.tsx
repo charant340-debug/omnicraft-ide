@@ -1,18 +1,21 @@
 import React from 'react';
 import Editor from '@monaco-editor/react';
 import { useIDEStore } from '../stores/ideStore';
-import { X, Circle } from '@phosphor-icons/react';
+import { X, Circle, Play, PlayCircle } from '@phosphor-icons/react';
 import { Button } from './ui/button';
+import { useToast } from './ui/use-toast';
 
 export const CodeEditor: React.FC = () => {
   const { 
     openFiles, 
     activeFileId, 
+    activeTab,
     setActiveFile, 
     closeFile, 
     updateFileContent, 
     saveFile 
   } = useIDEStore();
+  const { toast } = useToast();
 
   const activeFile = openFiles.find(f => f.id === activeFileId);
 
@@ -26,6 +29,20 @@ export const CodeEditor: React.FC = () => {
     if (activeFileId) {
       saveFile(activeFileId);
     }
+  };
+
+  const handleRunCurrent = () => {
+    toast({
+      title: `Running ${activeTab}`,
+      description: `Starting ${activeTab} project...`,
+    });
+  };
+
+  const handleRunAll = () => {
+    toast({
+      title: "Running All Projects",
+      description: "Starting frontend, backend, and embedded projects...",
+    });
   };
 
   // Handle Ctrl+S for save
@@ -90,6 +107,33 @@ export const CodeEditor: React.FC = () => {
             </Button>
           </div>
         ))}
+      </div>
+
+      {/* Run Controls */}
+      <div className="bg-panel-bg border-b border-border flex items-center justify-between px-4 py-2">
+        <div className="flex items-center space-x-2">
+          <Button
+            variant="default"
+            size="sm"
+            onClick={handleRunCurrent}
+            className="flex items-center space-x-2"
+          >
+            <Play size={14} />
+            <span>Run {activeTab}</span>
+          </Button>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={handleRunAll}
+            className="flex items-center space-x-2"
+          >
+            <PlayCircle size={14} />
+            <span>Run All</span>
+          </Button>
+        </div>
+        <div className="text-xs text-muted-foreground">
+          {openFiles.length} file{openFiles.length !== 1 ? 's' : ''} open
+        </div>
       </div>
 
       {/* Editor */}
