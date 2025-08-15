@@ -70,16 +70,36 @@ export const AIAssistant: React.FC = () => {
 
       const aiResponse = data?.response || 'Sorry, I could not generate a response.';
       
-      // Check if the response contains code that can be applied to the current file
-      const codeMatch = aiResponse.match(/```[\w]*\n([\s\S]*?)\n```/);
-      if (codeMatch && activeFile) {
-        const extractedCode = codeMatch[1].trim(); // Remove leading/trailing whitespace
-        addAIMessage('assistant', aiResponse, {
-          hasCodeSuggestion: true,
-          codeSuggestion: extractedCode,
-          targetFile: activeFile.name
-        });
+      console.log('AI Response:', aiResponse);
+      
+      // Improved code detection - handles various markdown formats
+      const codeBlockRegex = /```(?:\w+)?\s*([\s\S]*?)\s*```/g;
+      const codeMatches = [...aiResponse.matchAll(codeBlockRegex)];
+      
+      console.log('Code matches found:', codeMatches.length);
+      
+      if (codeMatches.length > 0 && activeFile) {
+        // Extract the first code block (most relevant one)
+        const extractedCode = codeMatches[0][1].trim();
+        console.log('Extracted code:', extractedCode);
+        console.log('Code length:', extractedCode.length);
+        
+        if (extractedCode.length > 0) {
+          // Clean the content from code blocks for documentation display
+          const cleanContent = aiResponse.replace(/```[\s\S]*?```/g, '').trim();
+          
+          addAIMessage('assistant', aiResponse, {
+            hasCodeSuggestion: true,
+            codeSuggestion: extractedCode,
+            targetFile: activeFile.name
+          });
+          console.log('Added AI message with code suggestion');
+        } else {
+          console.log('Empty code block detected, treating as regular message');
+          addAIMessage('assistant', aiResponse);
+        }
       } else {
+        console.log('No code blocks found or no active file');
         addAIMessage('assistant', aiResponse);
       }
       
