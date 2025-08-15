@@ -346,12 +346,8 @@ export const useIDEStore = create<IDEState>((set, get) => ({
       addAIMessage('user', 'Write a simple React component that displays "Hello IoT World!" with a button that changes the text color');
       
       try {
-        // Import supabase client
-        const { createClient } = await import('@supabase/supabase-js');
-        const supabase = createClient(
-          'https://wpvoedwxliaxojzbekvd.supabase.co',
-          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indwdm9lZHd4bGlheG9qemJla3ZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUyNDA4MzMsImV4cCI6MjA3MDgxNjgzM30.A2oHCXF0ca8fjmEoHv2jz2l20GHgVNTV8wavml12ehA'
-        );
+        // Use the existing supabase client
+        const { supabase } = await import('@/integrations/supabase/client');
         
         const context = activeFile ? 
           `Working on file: ${activeFile.name} (${activeFile.language})\n${activeFile.content.slice(0, 500)}...` : 
@@ -367,7 +363,7 @@ export const useIDEStore = create<IDEState>((set, get) => ({
 
         if (error) {
           console.error('AI function error:', error);
-          addAIMessage('assistant', `❌ AI test failed: ${error.message}`);
+          addAIMessage('assistant', `❌ AI test failed: ${error.message || 'Unknown error'}`);
           return;
         }
 
@@ -388,7 +384,7 @@ export const useIDEStore = create<IDEState>((set, get) => ({
         
       } catch (error) {
         console.error('Error in AI test:', error);
-        addAIMessage('assistant', `❌ AI test failed: ${error.message}`);
+        addAIMessage('assistant', `❌ AI test failed: ${error.message || 'Network or function error'}`);
       }
     }
 }));
