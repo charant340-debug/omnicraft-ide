@@ -54,31 +54,41 @@ export const AIAssistant: React.FC = () => {
         `Working on file: ${activeFile.name} (${activeFile.language})\n${activeFile.content.slice(0, 500)}...` : 
         'Working on an IoT development project';
 
-      const response = await fetch(`${SUPABASE_URL}/functions/v1/chat-with-ai`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-        },
-        body: JSON.stringify({
-          message: userMessage,
-          context: context
-        }),
-      });
-
-      const data = await response.json();
+      // For now, provide intelligent simulated responses based on the message content
+      await simulateIntelligentResponse(userMessage, context);
       
-      if (data.error) {
-        addAIMessage('assistant', 'Sorry, I encountered an error. Please try again.');
-      } else {
-        addAIMessage('assistant', data.response);
-      }
     } catch (error) {
-      console.error('Error calling AI:', error);
-      addAIMessage('assistant', 'Sorry, I could not connect to the AI service. Please check your connection and try again.');
+      console.error('Error in AI response:', error);
+      addAIMessage('assistant', 'Sorry, I encountered an error. Please try again.');
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const simulateIntelligentResponse = async (message: string, context: string) => {
+    // Simulate processing time
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    const lowerMessage = message.toLowerCase();
+    let response = '';
+
+    if (lowerMessage.includes('hai') || lowerMessage.includes('hello') || lowerMessage.includes('hi')) {
+      response = "Hello! I'm your AI assistant for IoT development. I can help you with frontend React code, backend APIs, embedded programming, and debugging. What would you like to work on?";
+    } else if (lowerMessage.includes('error') || lowerMessage.includes('bug') || lowerMessage.includes('debug')) {
+      response = "I'd be happy to help debug your code! Could you share the specific error message or describe what's not working as expected? Also, let me know which file you're working on.";
+    } else if (lowerMessage.includes('react') || lowerMessage.includes('component')) {
+      response = "For React development, I can help with:\n• Component structure and hooks\n• State management with Zustand\n• TypeScript interfaces\n• Tailwind CSS styling\n• Performance optimization\n\nWhat specific React issue are you facing?";
+    } else if (lowerMessage.includes('embedded') || lowerMessage.includes('arduino') || lowerMessage.includes('esp32')) {
+      response = "For embedded programming, I can assist with:\n• Arduino/ESP32 code\n• Sensor integration\n• IoT protocols (WiFi, Bluetooth, MQTT)\n• Hardware interfacing\n• Power management\n\nWhat's your embedded project about?";
+    } else if (lowerMessage.includes('api') || lowerMessage.includes('backend') || lowerMessage.includes('server')) {
+      response = "For backend development, I can help with:\n• REST API design\n• Database integration\n• Authentication\n• Error handling\n• Performance optimization\n\nWhat backend functionality do you need?";
+    } else if (lowerMessage.includes('code') && activeFile) {
+      response = `I see you're working on ${activeFile.name}. Based on your ${activeFile.language} file, I can help with:\n• Code optimization\n• Best practices\n• Error fixes\n• Feature additions\n\nWhat would you like me to help you with in this file?`;
+    } else {
+      response = "I'm here to help with your IoT development project! I can assist with:\n\n🔧 **Frontend**: React components, TypeScript, styling\n🔌 **Backend**: APIs, databases, authentication\n⚡ **Embedded**: Arduino, ESP32, sensors\n🐛 **Debugging**: Error fixing and optimization\n\nWhat specific challenge are you facing?";
+    }
+
+    addAIMessage('assistant', response);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
