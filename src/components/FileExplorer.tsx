@@ -109,7 +109,7 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
           />
         ) : (
           <span 
-            className="flex-1 text-sm text-foreground select-none"
+            className="flex-1 text-sm text-sidebar-foreground select-none"
             onClick={handleClick}
           >
             {item.name}
@@ -182,11 +182,11 @@ export const FileExplorer: React.FC = () => {
   const currentFiles = files[activeTab] || [];
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col bg-sidebar-bg text-sidebar-foreground">
       {/* Header */}
-      <div className="px-4 py-3 border-b border-border bg-panel-bg">
+      <div className="px-4 py-3 border-b border-border bg-sidebar-bg">
         <div className="flex items-center justify-between">
-          <h3 className="font-semibold text-foreground capitalize">{activeTab} Files</h3>
+          <h3 className="font-semibold text-sidebar-foreground capitalize">{activeTab} Files</h3>
           <Button
             variant="ghost"
             size="sm"
