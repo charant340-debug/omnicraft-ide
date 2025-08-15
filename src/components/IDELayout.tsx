@@ -69,7 +69,11 @@ export const IDELayout: React.FC = () => {
           <Button
             variant="outline"
             size="sm"
-            onClick={testAI}
+            onClick={() => {
+              testAI();
+              // Also show AI panel to see the result
+              if (!isAIVisible) toggleAI();
+            }}
             className="border-border hover:bg-file-hover"
           >
             🧪 Test AI
