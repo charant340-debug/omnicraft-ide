@@ -47,20 +47,36 @@ export const AIAssistant: React.FC = () => {
     addAIMessage('user', userMessage);
     setIsLoading(true);
 
-    // Simulate AI response
-    setTimeout(() => {
-      const responses = [
-        "I can help you with that! Let me suggest some improvements to your code.",
-        "Here's how you can implement that feature:",
-        "I notice you're working on IoT development. Here are some best practices:",
-        "Let me help you with the backend implementation:",
-        "For embedded programming, consider this approach:"
-      ];
+    try {
+      // Get context from current file
+      const context = activeFile ? 
+        `Working on file: ${activeFile.name} (${activeFile.language})\n${activeFile.content.slice(0, 500)}...` : 
+        'Working on an IoT development project';
+
+      const response = await fetch('/functions/v1/chat-with-ai', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: userMessage,
+          context: context
+        }),
+      });
+
+      const data = await response.json();
       
-      const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-      addAIMessage('assistant', randomResponse);
+      if (data.error) {
+        addAIMessage('assistant', 'Sorry, I encountered an error. Please try again.');
+      } else {
+        addAIMessage('assistant', data.response);
+      }
+    } catch (error) {
+      console.error('Error calling AI:', error);
+      addAIMessage('assistant', 'Sorry, I could not connect to the AI service. Please check your connection and try again.');
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
