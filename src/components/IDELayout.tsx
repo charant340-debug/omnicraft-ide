@@ -1,15 +1,23 @@
 import React from 'react';
 import { FileExplorer } from './FileExplorer';
 import { CodeEditor } from './CodeEditor';
+import { OutputPanel } from './OutputPanel';
 import { AIAssistant } from './AIAssistant';
 import { TabBar } from './TabBar';
 import { DeviceConnection } from './DeviceConnection';
 import { useIDEStore } from '../stores/ideStore';
-import { Robot, Sparkle } from '@phosphor-icons/react';
+import { Robot, Sparkle, SidebarSimple, Terminal } from '@phosphor-icons/react';
 import { Button } from './ui/button';
 
 export const IDELayout: React.FC = () => {
-  const { isAIVisible, toggleAI } = useIDEStore();
+  const { 
+    isAIVisible, 
+    isExplorerCollapsed, 
+    isOutputVisible, 
+    toggleAI, 
+    toggleExplorer, 
+    toggleOutput 
+  } = useIDEStore();
 
   return (
     <div className="min-h-screen bg-background font-ui flex flex-col">
@@ -25,6 +33,24 @@ export const IDELayout: React.FC = () => {
           <TabBar />
         </div>
         <div className="flex items-center space-x-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={toggleExplorer}
+            className="border-border hover:bg-file-hover"
+          >
+            <SidebarSimple size={16} className="mr-2" />
+            {isExplorerCollapsed ? 'Show' : 'Hide'} Explorer
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={toggleOutput}
+            className="border-border hover:bg-file-hover"
+          >
+            <Terminal size={16} className="mr-2" />
+            {isOutputVisible ? 'Hide' : 'Show'} Output
+          </Button>
           <Button
             variant={isAIVisible ? "default" : "outline"}
             size="sm"
@@ -46,13 +72,18 @@ export const IDELayout: React.FC = () => {
       {/* Main Content */}
       <div className="flex flex-1 overflow-hidden">
         {/* File Explorer */}
-        <div className="w-80 bg-sidebar-bg border-r border-border flex-shrink-0">
-          <FileExplorer />
-        </div>
+        {!isExplorerCollapsed && (
+          <div className="w-80 bg-sidebar-bg border-r border-border flex-shrink-0">
+            <FileExplorer />
+          </div>
+        )}
 
-        {/* Code Editor */}
+        {/* Code Editor Area */}
         <div className="flex-1 bg-editor min-w-0 flex flex-col">
-          <CodeEditor />
+          <div className="flex-1">
+            <CodeEditor />
+          </div>
+          <OutputPanel />
         </div>
 
         {/* AI Assistant */}

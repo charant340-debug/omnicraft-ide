@@ -31,6 +31,11 @@ export interface IDEState {
   openFiles: OpenFile[];
   activeFileId: string | null;
   
+  // UI state
+  isExplorerCollapsed: boolean;
+  isOutputVisible: boolean;
+  outputLogs: Array<{ id: string; type: 'info' | 'error' | 'success'; message: string; timestamp: Date }>;
+  
   // Device connection
   isDeviceConnected: boolean;
   deviceType: string | null;
@@ -49,6 +54,10 @@ export interface IDEState {
   createFile: (tab: ProjectTab, name: string, parent?: string) => void;
   deleteFile: (tab: ProjectTab, fileId: string) => void;
   renameFile: (tab: ProjectTab, fileId: string, newName: string) => void;
+  toggleExplorer: () => void;
+  toggleOutput: () => void;
+  addOutputLog: (type: 'info' | 'error' | 'success', message: string) => void;
+  clearOutputLogs: () => void;
   connectDevice: (deviceType: string) => void;
   disconnectDevice: () => void;
   toggleAI: () => void;
@@ -141,6 +150,9 @@ export const useIDEStore = create<IDEState>((set, get) => ({
   files: initialFiles,
   openFiles: [],
   activeFileId: null,
+  isExplorerCollapsed: false,
+  isOutputVisible: false,
+  outputLogs: [],
   isDeviceConnected: false,
   deviceType: null,
   isAIVisible: true,
@@ -274,6 +286,27 @@ export const useIDEStore = create<IDEState>((set, get) => ({
     updatedFiles[tab] = updateFile(files[tab]);
     set({ files: updatedFiles });
   },
+
+  toggleExplorer: () => set(state => ({ 
+    isExplorerCollapsed: !state.isExplorerCollapsed 
+  })),
+
+  toggleOutput: () => set(state => ({ 
+    isOutputVisible: !state.isOutputVisible 
+  })),
+
+  addOutputLog: (type, message) => {
+    const { outputLogs } = get();
+    const newLog = {
+      id: Date.now().toString(),
+      type,
+      message,
+      timestamp: new Date()
+    };
+    set({ outputLogs: [...outputLogs, newLog] });
+  },
+
+  clearOutputLogs: () => set({ outputLogs: [] }),
 
   connectDevice: (deviceType) => set({ 
     isDeviceConnected: true, 

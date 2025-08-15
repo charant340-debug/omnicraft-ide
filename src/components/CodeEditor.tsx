@@ -13,7 +13,9 @@ export const CodeEditor: React.FC = () => {
     setActiveFile, 
     closeFile, 
     updateFileContent, 
-    saveFile 
+    saveFile,
+    addOutputLog,
+    toggleOutput
   } = useIDEStore();
   const { toast } = useToast();
 
@@ -32,6 +34,14 @@ export const CodeEditor: React.FC = () => {
   };
 
   const handleRunCurrent = () => {
+    addOutputLog('info', `Starting ${activeTab} project...`);
+    toggleOutput(); // Show output panel
+    
+    // Simulate running process
+    setTimeout(() => {
+      addOutputLog('success', `${activeTab} project started successfully on port ${activeTab === 'frontend' ? '3000' : activeTab === 'backend' ? '8000' : 'device'}`);
+    }, 1000);
+
     toast({
       title: `Running ${activeTab}`,
       description: `Starting ${activeTab} project...`,
@@ -39,6 +49,20 @@ export const CodeEditor: React.FC = () => {
   };
 
   const handleRunAll = () => {
+    addOutputLog('info', 'Starting all projects...');
+    toggleOutput(); // Show output panel
+    
+    // Simulate running all projects
+    setTimeout(() => {
+      addOutputLog('success', 'Frontend started on port 3000');
+    }, 500);
+    setTimeout(() => {
+      addOutputLog('success', 'Backend started on port 8000');
+    }, 1000);
+    setTimeout(() => {
+      addOutputLog('success', 'Embedded code deployed to device');
+    }, 1500);
+
     toast({
       title: "Running All Projects",
       description: "Starting frontend, backend, and embedded projects...",
