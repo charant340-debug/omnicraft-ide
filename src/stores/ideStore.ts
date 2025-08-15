@@ -62,6 +62,7 @@ export interface IDEState {
   disconnectDevice: () => void;
   toggleAI: () => void;
   addAIMessage: (role: 'user' | 'assistant', content: string, options?: { hasCodeSuggestion?: boolean; codeSuggestion?: string; targetFile?: string }) => void;
+  testAI: () => Promise<void>;
 }
 
 const getLanguageFromFilename = (filename: string): string => {
@@ -336,4 +337,58 @@ export const useIDEStore = create<IDEState>((set, get) => ({
         aiMessages: [...state.aiMessages, message],
       }));
     },
+
+    testAI: async () => {
+      const { addAIMessage, activeFileId, openFiles } = get();
+      const activeFile = openFiles.find(f => f.id === activeFileId);
+      
+      // Add test user message
+      addAIMessage('user', 'Write a simple React component that displays "Hello IoT World!" with a button that changes the text color');
+      
+      try {
+        // Import supabase client
+        const { createClient } = await import('@supabase/supabase-js');
+        const supabase = createClient(
+          'https://wpvoedwxliaxojzbekvd.supabase.co',
+          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indwdm9lZHd4bGlheG9qemJla3ZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUyNDA4MzMsImV4cCI6MjA3MDgxNjgzM30.A2oHCXF0ca8fjmEoHv2jz2l20GHgVNTV8wavml12ehA'
+        );
+        
+        const context = activeFile ? 
+          `Working on file: ${activeFile.name} (${activeFile.language})\n${activeFile.content.slice(0, 500)}...` : 
+          'Working on an IoT development project';
+
+        // Call the AI edge function
+        const { data, error } = await supabase.functions.invoke('chat-with-ai', {
+          body: {
+            message: 'Write a simple React component that displays "Hello IoT World!" with a button that changes the text color',
+            context: context
+          }
+        });
+
+        if (error) {
+          console.error('AI function error:', error);
+          addAIMessage('assistant', `❌ AI test failed: ${error.message}`);
+          return;
+        }
+
+        const aiResponse = data?.response || 'Sorry, I could not generate a response.';
+        
+        // Check if the response contains code that can be applied to the current file
+        const codeMatch = aiResponse.match(/```[\w]*\n([\s\S]*?)\n```/);
+        if (codeMatch && activeFile) {
+          const extractedCode = codeMatch[1];
+          addAIMessage('assistant', `✅ AI test successful! ${aiResponse}`, {
+            hasCodeSuggestion: true,
+            codeSuggestion: extractedCode,
+            targetFile: activeFile.name
+          });
+        } else {
+          addAIMessage('assistant', `✅ AI test successful! ${aiResponse}`);
+        }
+        
+      } catch (error) {
+        console.error('Error in AI test:', error);
+        addAIMessage('assistant', `❌ AI test failed: ${error.message}`);
+      }
+    }
 }));

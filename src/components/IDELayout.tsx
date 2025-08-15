@@ -16,7 +16,8 @@ export const IDELayout: React.FC = () => {
     isOutputVisible, 
     toggleAI, 
     toggleExplorer, 
-    toggleOutput 
+    toggleOutput,
+    testAI 
   } = useIDEStore();
 
   return (
@@ -64,6 +65,14 @@ export const IDELayout: React.FC = () => {
           >
             {isAIVisible ? <Sparkle size={16} className="mr-2" /> : <Robot size={16} className="mr-2" />}
             {isAIVisible ? 'Hide AI' : 'Show AI'}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={testAI}
+            className="border-border hover:bg-file-hover"
+          >
+            🧪 Test AI
           </Button>
           <DeviceConnection />
         </div>
