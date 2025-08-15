@@ -13,116 +13,75 @@ serve(async (req) => {
   }
 
   try {
-    console.log('🚀 Function started');
+    console.log('Testing Gemini API connection...');
     
-    const body = await req.text();
-    console.log('📥 Raw request body:', body);
-    
-    const { message, context } = JSON.parse(body);
-    console.log('✅ Parsed request - Message length:', message?.length, 'Context length:', context?.length);
-
-    if (!message) {
-      console.log('❌ No message provided');
-      return new Response(
-        JSON.stringify({ error: 'Message is required' }),
-        { 
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      );
-    }
-
     const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
-    console.log('🔑 API Key check:', geminiApiKey ? `Found (${geminiApiKey.substring(0, 10)}...)` : 'NOT FOUND');
-    
     if (!geminiApiKey) {
-      console.log('❌ Gemini API key missing');
       return new Response(
-        JSON.stringify({ error: 'Gemini API key not configured' }),
-        { 
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
+        JSON.stringify({ error: 'Gemini API key not found in environment' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const prompt = `You are an AI assistant for IoT development. Help with React, embedded systems, and debugging.
+    console.log('API key found, making test request to Gemini...');
 
-Context: ${context || 'IoT project'}
-Question: ${message}
-
-Please provide a helpful, concise response. Include code in markdown blocks if needed.`;
-
-    console.log('📤 Calling Gemini API...');
-    
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`;
-    console.log('🌐 API URL:', geminiUrl.replace(geminiApiKey, 'KEY_HIDDEN'));
-
-    const requestBody = {
-      contents: [{
-        parts: [{
-          text: prompt
-        }]
-      }],
-      generationConfig: {
-        temperature: 0.7,
-        maxOutputTokens: 1000,
+    // Simple test request to Gemini
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [
+                {
+                  text: "Hello, respond with 'Gemini API is working!' if you receive this message."
+                }
+              ]
+            }
+          ]
+        })
       }
-    };
+    );
+
+    console.log('Gemini response status:', response.status);
     
-    console.log('📋 Request body prepared');
-
-    const response = await fetch(geminiUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(requestBody),
-    });
-
-    console.log('📨 Gemini response status:', response.status);
-    console.log('📨 Gemini response headers:', Object.fromEntries(response.headers.entries()));
-
     const responseText = await response.text();
-    console.log('📄 Raw Gemini response:', responseText.substring(0, 200) + '...');
+    console.log('Gemini response body:', responseText);
 
     if (!response.ok) {
-      console.error('❌ Gemini API error:', response.status, responseText);
       return new Response(
         JSON.stringify({ 
-          error: `Gemini API error: ${response.status}`,
-          details: responseText.substring(0, 200)
+          error: `Gemini API returned ${response.status}`,
+          details: responseText
         }),
-        { 
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
     const data = JSON.parse(responseText);
-    console.log('📊 Parsed response structure:', Object.keys(data));
-    
-    const aiResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Sorry, I could not generate a response.';
-    console.log('✅ AI response extracted, length:', aiResponse.length);
+    const aiResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || 'No response text found';
 
     return new Response(
-      JSON.stringify({ response: aiResponse }),
+      JSON.stringify({ 
+        success: true,
+        response: aiResponse,
+        raw_response: data
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error) {
-    console.error('💥 Critical error:', error.name, error.message);
-    console.error('📍 Stack trace:', error.stack);
+    console.error('Error testing Gemini API:', error);
     return new Response(
       JSON.stringify({ 
-        error: `Function error: ${error.message}`,
-        type: error.name
+        error: `Test failed: ${error.message}`,
+        stack: error.stack
       }),
-      { 
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      }
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });
