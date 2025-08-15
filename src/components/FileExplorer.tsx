@@ -169,6 +169,14 @@ export const FileExplorer: React.FC = () => {
   const { activeTab, files, openFile, createFile } = useIDEStore();
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set(['frontend-1']));
 
+  // Filter files based on active tab
+  const currentFiles = files[activeTab] || [];
+
+  // Reset expanded folders when tab changes to avoid stale folder states
+  React.useEffect(() => {
+    setExpandedFolders(new Set());
+  }, [activeTab]);
+
   const toggleFolder = (id: string) => {
     const newExpanded = new Set(expandedFolders);
     if (newExpanded.has(id)) {
@@ -179,14 +187,12 @@ export const FileExplorer: React.FC = () => {
     setExpandedFolders(newExpanded);
   };
 
-  const currentFiles = files[activeTab] || [];
-
   return (
     <div className="h-full flex flex-col bg-sidebar-bg text-sidebar-foreground">
       {/* Header */}
       <div className="px-4 py-3 border-b border-border bg-sidebar-bg">
         <div className="flex items-center justify-between">
-          <h3 className="font-semibold text-sidebar-foreground capitalize">{activeTab} Files</h3>
+          <h3 className="font-semibold text-sidebar-foreground capitalize">{activeTab} Files ({currentFiles.length})</h3>
           <Button
             variant="ghost"
             size="sm"
@@ -200,16 +206,31 @@ export const FileExplorer: React.FC = () => {
 
       {/* File Tree */}
       <div className="flex-1 overflow-y-auto">
-        {currentFiles.map(item => (
-          <FileTreeItem
-            key={item.id}
-            item={item}
-            level={0}
-            onSelect={openFile}
-            expandedFolders={expandedFolders}
-            toggleFolder={toggleFolder}
-          />
-        ))}
+        {currentFiles.length === 0 ? (
+          <div className="text-center py-8 px-4">
+            <div className="text-muted-foreground mb-2">No files in {activeTab}</div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => createFile(activeTab, `new-file.${activeTab === 'embedded' ? 'py' : activeTab === 'backend' ? 'py' : 'tsx'}`)}
+              className="border-border hover:bg-file-hover text-sidebar-foreground"
+            >
+              <Plus size={14} className="mr-2" />
+              Create First File
+            </Button>
+          </div>
+        ) : (
+          currentFiles.map(item => (
+            <FileTreeItem
+              key={item.id}
+              item={item}
+              level={0}
+              onSelect={openFile}
+              expandedFolders={expandedFolders}
+              toggleFolder={toggleFolder}
+            />
+          ))
+        )}
       </div>
     </div>
   );
