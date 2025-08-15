@@ -28,13 +28,13 @@ serve(async (req) => {
       );
     }
 
-    const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
-    console.log('OpenAI API key check:', openaiApiKey ? 'Found' : 'Missing');
+    const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
+    console.log('Gemini API key check:', geminiApiKey ? 'Found' : 'Missing');
     
-    if (!openaiApiKey) {
-      console.log('OpenAI API key not configured');
+    if (!geminiApiKey) {
+      console.log('Gemini API key not configured');
       return new Response(
-        JSON.stringify({ error: 'OpenAI API key not configured' }),
+        JSON.stringify({ error: 'Gemini API key not configured' }),
         { 
           status: 500,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -42,7 +42,7 @@ serve(async (req) => {
       );
     }
 
-    const systemMessage = `You are an AI assistant specialized in IoT development, embedded systems, and full-stack web development. You help developers with:
+    const systemPrompt = `You are an AI assistant specialized in IoT development, embedded systems, and full-stack web development. You help developers with:
     - Frontend development (React, TypeScript, CSS)
     - Backend development (Node.js, APIs, databases)
     - Embedded systems programming (Arduino, ESP32, sensors)
@@ -50,35 +50,40 @@ serve(async (req) => {
     - Code debugging and optimization
     - Best practices and architecture advice
 
-    When providing code, wrap it in markdown code blocks. Keep responses concise but helpful.`;
+    When providing code, wrap it in markdown code blocks. Keep responses concise but helpful.
 
-    const messages = [
-      { role: 'system', content: systemMessage },
-      { role: 'user', content: `Context: ${context || 'Working on an IoT project'}\n\nQuestion: ${message}` }
-    ];
+    Context: ${context || 'Working on an IoT project'}
 
-    console.log('Calling OpenAI API...');
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    User Question: ${message}`;
+
+    console.log('Calling Gemini API...');
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${openaiApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: messages,
-        max_tokens: 1000,
-        temperature: 0.7,
+        contents: [{
+          parts: [{
+            text: systemPrompt
+          }]
+        }],
+        generationConfig: {
+          temperature: 0.7,
+          topK: 40,
+          topP: 0.95,
+          maxOutputTokens: 1000,
+        }
       }),
     });
 
-    console.log('OpenAI response status:', response.status);
+    console.log('Gemini response status:', response.status);
 
     if (!response.ok) {
       const errorData = await response.text();
-      console.error('OpenAI API error:', response.status, errorData);
+      console.error('Gemini API error:', response.status, errorData);
       return new Response(
-        JSON.stringify({ error: `OpenAI API error: ${response.status}` }),
+        JSON.stringify({ error: `Gemini API error: ${response.status}` }),
         { 
           status: 500,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -87,9 +92,9 @@ serve(async (req) => {
     }
 
     const data = await response.json();
-    console.log('OpenAI response received, extracting content...');
+    console.log('Gemini response received, extracting content...');
     
-    const aiResponse = data.choices?.[0]?.message?.content || 'Sorry, I could not generate a response.';
+    const aiResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Sorry, I could not generate a response.';
     console.log('AI response length:', aiResponse.length);
 
     return new Response(
