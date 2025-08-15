@@ -55,7 +55,7 @@ Response format: Start directly with the code block, then one brief sentence if 
           contents: [{ parts: [{ text: systemPrompt }] }],
           generationConfig: {
             temperature: 0.7,
-            maxOutputTokens: 1000
+            maxOutputTokens: 2500
           }
         })
       }
@@ -103,7 +103,9 @@ Response format: Start directly with the code block, then one brief sentence if 
       aiResponse = 'I received your message but had trouble generating a response. Please try again.';
     }
 
-    console.log('Final AI response:', aiResponse.substring(0, 100));
+    console.log('Final AI response length:', aiResponse.length);
+    console.log('Final AI response preview:', aiResponse.substring(0, 200));
+    console.log('Contains code blocks:', aiResponse.includes('```'));
 
     return new Response(
       JSON.stringify({ response: aiResponse }),

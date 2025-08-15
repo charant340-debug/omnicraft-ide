@@ -112,8 +112,15 @@ export const AIAssistant: React.FC = () => {
   };
 
   const handleAcceptSuggestion = (suggestion: string) => {
-    if (activeFileId) {
+    if (activeFileId && suggestion.trim()) {
+      console.log('Applying code to file:', activeFileId);
+      console.log('Code being applied:', suggestion);
       updateFileContent(activeFileId, suggestion);
+      // Add success feedback
+      addAIMessage('assistant', `✅ Code successfully applied to ${activeFile?.name || 'your file'}!`);
+    } else {
+      console.error('Cannot apply code - no active file or empty suggestion');
+      addAIMessage('assistant', '❌ Cannot apply code: no active file selected or empty code block.');
     }
   };
 
@@ -191,24 +198,27 @@ export const AIAssistant: React.FC = () => {
                       {message.hasCodeSuggestion && message.codeSuggestion && message.codeSuggestion.trim() ? (
                         // Lovable-style code suggestion with confirmation
                         <div className="w-full mb-6">
-                          {/* Documentation-style explanation */}
-                          {message.content && message.content.trim() && !message.content.includes('```') && (
-                            <div className="mb-4 p-4 bg-muted/20 border border-border rounded-lg">
-                              <div className="flex items-start space-x-3">
-                                <div className="w-6 h-6 bg-gradient-primary rounded-md flex items-center justify-center flex-shrink-0 mt-0.5">
-                                  <Robot size={12} className="text-background" />
-                                </div>
-                                <div className="flex-1">
-                                  <h4 className="font-medium text-foreground mb-2">AI Suggestion</h4>
-                                  <div className="text-sm text-muted-foreground prose prose-sm max-w-none">
-                                    {message.content.replace(/```[\s\S]*?```/g, '').trim()}
+                           {/* Documentation-style explanation */}
+                          {(() => {
+                            const cleanContent = message.content.replace(/```[\s\S]*?```/g, '').trim();
+                            return cleanContent && (
+                              <div className="mb-4 p-4 bg-muted/20 border border-border rounded-lg">
+                                <div className="flex items-start space-x-3">
+                                  <div className="w-6 h-6 bg-gradient-primary rounded-md flex items-center justify-center flex-shrink-0 mt-0.5">
+                                    <Robot size={12} className="text-background" />
+                                  </div>
+                                  <div className="flex-1">
+                                    <h4 className="font-medium text-foreground mb-2">AI Explanation</h4>
+                                    <div className="text-sm text-muted-foreground prose prose-sm max-w-none">
+                                      {cleanContent}
+                                    </div>
                                   </div>
                                 </div>
                               </div>
-                            </div>
-                          )}
-
-                          {/* Code suggestion card */}
+                            );
+                          })()}
+                          
+                           {/* Code suggestion card */}
                           <div className="bg-card border border-border rounded-lg overflow-hidden">
                             {/* Header */}
                             <div className="bg-muted/40 border-b border-border px-4 py-3">
