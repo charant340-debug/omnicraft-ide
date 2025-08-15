@@ -154,50 +154,72 @@ export const AIAssistant: React.FC = () => {
                   key={message.id}
                   className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
-                  <div
-                    className={`
-                      max-w-[85%] rounded-lg px-3 py-2 
-                      ${message.role === 'user' 
-                        ? 'bg-primary text-primary-foreground' 
-                        : 'bg-muted text-foreground border border-border'
-                      }
-                    `}
-                  >
-                    <div className="flex items-start space-x-2">
-                      {message.role === 'assistant' && (
-                        <Robot size={16} className="mt-0.5 text-accent" />
-                      )}
-                      {message.role === 'user' && (
+                  {message.role === 'user' ? (
+                    <div className="max-w-[85%] rounded-lg px-3 py-2 bg-primary text-primary-foreground">
+                      <div className="flex items-start space-x-2">
                         <User size={16} className="mt-0.5" />
-                      )}
-                      <div className="flex-1">
-                        <p className="text-sm">{message.content}</p>
-                        <div className="text-xs opacity-75 mt-1">
-                          {formatTimestamp(message.timestamp)}
+                        <div className="flex-1">
+                          <p className="text-sm">{message.content}</p>
+                          <div className="text-xs opacity-75 mt-1">
+                            {formatTimestamp(message.timestamp)}
+                          </div>
                         </div>
                       </div>
                     </div>
-                    
-                    {/* Code suggestion from AI */}
-                    {message.role === 'assistant' && message.hasCodeSuggestion && message.codeSuggestion && (
-                      <div className="mt-3 border-t border-border pt-3">
-                        <div className="bg-editor rounded p-2 font-code text-xs">
-                          <div className="text-muted-foreground mb-1">Suggested code for {message.targetFile}:</div>
-                          <code className="whitespace-pre-wrap">
-                            {message.codeSuggestion}
-                          </code>
+                  ) : (
+                    <div className="w-full">
+                      {message.hasCodeSuggestion && message.codeSuggestion ? (
+                        // Code-focused display
+                        <div className="bg-editor border border-border rounded-lg overflow-hidden">
+                          <div className="bg-panel-header px-4 py-2 border-b border-border">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center space-x-2">
+                                <Code size={16} className="text-accent" />
+                                <span className="text-sm font-medium text-foreground">Code Solution</span>
+                                {message.targetFile && (
+                                  <span className="text-xs text-muted-foreground">for {message.targetFile}</span>
+                                )}
+                              </div>
+                              <Button
+                                size="sm"
+                                className="bg-success hover:bg-success/80 text-white"
+                                onClick={() => handleAcceptSuggestion(message.codeSuggestion!)}
+                              >
+                                <Check size={12} className="mr-1" />
+                                Apply to File
+                              </Button>
+                            </div>
+                          </div>
+                          <div className="relative">
+                            <pre className="bg-editor p-4 overflow-x-auto text-sm font-code text-foreground">
+                              <code>{message.codeSuggestion}</code>
+                            </pre>
+                          </div>
+                          {message.content && message.content.trim() && !message.content.includes('```') && (
+                            <div className="px-4 py-2 text-xs text-muted-foreground border-t border-border bg-muted/50">
+                              {message.content.replace(/```[\s\S]*?```/g, '').trim()}
+                            </div>
+                          )}
+                          <div className="px-4 py-1 text-xs text-muted-foreground bg-muted/30">
+                            {formatTimestamp(message.timestamp)}
+                          </div>
                         </div>
-                        <Button
-                          size="sm"
-                          className="mt-2 bg-success hover:bg-success/80 text-white"
-                          onClick={() => handleAcceptSuggestion(message.codeSuggestion!)}
-                        >
-                          <Check size={12} className="mr-1" />
-                          Apply to File
-                        </Button>
-                      </div>
-                    )}
-                  </div>
+                      ) : (
+                        // Regular message display
+                        <div className="max-w-[85%] rounded-lg px-3 py-2 bg-muted text-foreground border border-border">
+                          <div className="flex items-start space-x-2">
+                            <Robot size={16} className="mt-0.5 text-accent" />
+                            <div className="flex-1">
+                              <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                              <div className="text-xs opacity-75 mt-1">
+                                {formatTimestamp(message.timestamp)}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               ))}
               
