@@ -5,9 +5,11 @@ import { AIAssistant } from './AIAssistant';
 import { TabBar } from './TabBar';
 import { DeviceConnection } from './DeviceConnection';
 import { useIDEStore } from '../stores/ideStore';
+import { Robot, Sparkle } from '@phosphor-icons/react';
+import { Button } from './ui/button';
 
 export const IDELayout: React.FC = () => {
-  const { isAIVisible } = useIDEStore();
+  const { isAIVisible, toggleAI } = useIDEStore();
 
   return (
     <div className="min-h-screen bg-background font-ui flex flex-col">
@@ -22,24 +24,40 @@ export const IDELayout: React.FC = () => {
           </div>
           <TabBar />
         </div>
-        <DeviceConnection />
+        <div className="flex items-center space-x-2">
+          <Button
+            variant={isAIVisible ? "default" : "outline"}
+            size="sm"
+            onClick={toggleAI}
+            className={`
+              ${isAIVisible 
+                ? 'bg-primary text-primary-foreground shadow-glow' 
+                : 'border-border hover:bg-file-hover'
+              }
+            `}
+          >
+            {isAIVisible ? <Sparkle size={16} className="mr-2" /> : <Robot size={16} className="mr-2" />}
+            {isAIVisible ? 'Hide AI' : 'Show AI'}
+          </Button>
+          <DeviceConnection />
+        </div>
       </header>
 
       {/* Main Content */}
       <div className="flex flex-1 overflow-hidden">
         {/* File Explorer */}
-        <div className="w-80 bg-sidebar-bg border-r border-border">
+        <div className="w-80 bg-sidebar-bg border-r border-border flex-shrink-0">
           <FileExplorer />
         </div>
 
         {/* Code Editor */}
-        <div className={`flex-1 flex flex-col min-w-0 ${isAIVisible ? 'mr-96' : ''} transition-all duration-300`}>
+        <div className="flex-1 bg-editor min-w-0 flex flex-col">
           <CodeEditor />
         </div>
 
         {/* AI Assistant */}
         {isAIVisible && (
-          <div className="w-96 bg-panel-bg border-l border-border">
+          <div className="w-96 bg-panel-bg border-l border-border flex-shrink-0">
             <AIAssistant />
           </div>
         )}

@@ -83,21 +83,13 @@ export const AIAssistant: React.FC = () => {
   return (
     <div className="h-full flex flex-col bg-panel-bg">
       {/* Header */}
-      <div className="px-4 py-3 border-b border-border flex items-center justify-between">
+      <div className="px-4 py-3 border-b border-border flex items-center">
         <div className="flex items-center space-x-2">
           <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
             <Robot size={16} className="text-background" />
           </div>
           <h3 className="font-semibold text-foreground">AI Assistant</h3>
         </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={toggleAI}
-          className="w-6 h-6 p-0 hover:bg-file-hover"
-        >
-          <X size={14} />
-        </Button>
       </div>
 
       {/* Messages */}
