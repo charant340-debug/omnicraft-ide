@@ -64,7 +64,7 @@ export const AIAssistant: React.FC = () => {
 
       if (error) {
         console.error('AI function error:', error);
-        addAIMessage('assistant', `Sorry, I encountered an error: ${error.message || 'Unknown error'}. Please check that the OpenAI API key is properly configured.`);
+        addAIMessage('assistant', `Sorry, I encountered an error: ${error.message || 'Unknown error'}. Please check that the Gemini API key is properly configured.`);
         return;
       }
 
