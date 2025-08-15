@@ -105,12 +105,12 @@ export const IDELayout: React.FC = () => {
         )}
 
         {/* Code Editor Area */}
-        <div className="flex-1 bg-editor min-w-0 flex flex-col">
-          <div className="flex-1">
+        <div className="flex-1 bg-editor min-w-0 flex flex-col h-full">
+          <div className={`${isOutputVisible ? 'flex-[0.7]' : 'flex-1'} overflow-hidden`}>
             <CodeEditor />
           </div>
           {isOutputVisible && (
-            <div className="h-64 flex-shrink-0">
+            <div className="flex-[0.3] border-t border-border overflow-hidden">
               <OutputPanel />
             </div>
           )}
