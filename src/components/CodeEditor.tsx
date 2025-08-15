@@ -93,10 +93,11 @@ export const CodeEditor: React.FC = () => {
       </div>
 
       {/* Editor */}
-      <div className="flex-1">
+      <div className="flex-1 w-full h-full">
         {activeFile && (
           <Editor
             height="100%"
+            width="100%"
             defaultLanguage={activeFile.language}
             language={activeFile.language}
             value={activeFile.content}
@@ -108,7 +109,7 @@ export const CodeEditor: React.FC = () => {
               lineHeight: 1.5,
               minimap: { enabled: false },
               scrollBeyondLastLine: false,
-              wordWrap: 'on',
+              wordWrap: 'off',
               automaticLayout: true,
               tabSize: 2,
               insertSpaces: true,
@@ -117,6 +118,20 @@ export const CodeEditor: React.FC = () => {
               guides: {
                 bracketPairs: true,
                 indentation: true
+              },
+              lineNumbers: 'on',
+              glyphMargin: false,
+              folding: true,
+              lineDecorationsWidth: 0,
+              lineNumbersMinChars: 3,
+              scrollbar: {
+                vertical: 'visible',
+                horizontal: 'visible',
+                useShadows: false,
+                verticalHasArrows: false,
+                horizontalHasArrows: false,
+                verticalScrollbarSize: 10,
+                horizontalScrollbarSize: 10
               }
             }}
           />

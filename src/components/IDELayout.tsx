@@ -33,7 +33,7 @@ export const IDELayout: React.FC = () => {
         </div>
 
         {/* Code Editor */}
-        <div className={`flex-1 bg-editor ${isAIVisible ? 'mr-96' : ''} transition-all duration-300`}>
+        <div className={`flex-1 flex flex-col min-w-0 ${isAIVisible ? 'mr-96' : ''} transition-all duration-300`}>
           <CodeEditor />
         </div>
 
