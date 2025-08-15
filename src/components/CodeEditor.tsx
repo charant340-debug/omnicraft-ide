@@ -33,13 +33,70 @@ export const CodeEditor: React.FC = () => {
     }
   };
 
+  const simulateCodeExecution = (code: string, language: string) => {
+    // Extract print statements and simulate output
+    const outputs: string[] = [];
+    
+    if (language === 'python') {
+      const printMatches = code.match(/print\s*\(\s*["'`]([^"'`]*)["'`]\s*\)/g);
+      if (printMatches) {
+        printMatches.forEach(match => {
+          const content = match.match(/["'`]([^"'`]*)["'`]/);
+          if (content && content[1]) {
+            outputs.push(content[1]);
+          }
+        });
+      }
+    } else if (language === 'javascript' || language === 'typescript') {
+      const consoleMatches = code.match(/console\.log\s*\(\s*["'`]([^"'`]*)["'`]\s*\)/g);
+      if (consoleMatches) {
+        consoleMatches.forEach(match => {
+          const content = match.match(/["'`]([^"'`]*)["'`]/);
+          if (content && content[1]) {
+            outputs.push(content[1]);
+          }
+        });
+      }
+    } else if (language === 'cpp' || language === 'c') {
+      const coutMatches = code.match(/cout\s*<<\s*["']([^"']*)["']/g);
+      if (coutMatches) {
+        coutMatches.forEach(match => {
+          const content = match.match(/["']([^"']*)["']/);
+          if (content && content[1]) {
+            outputs.push(content[1]);
+          }
+        });
+      }
+    }
+    
+    return outputs;
+  };
+
   const handleRunCurrent = () => {
+    if (!activeFile) return;
+    
     addOutputLog('info', `Starting ${activeTab} project...`);
     toggleOutput(); // Show output panel
     
-    // Simulate running process
+    // Simulate compilation/setup time
     setTimeout(() => {
       addOutputLog('success', `${activeTab} project started successfully on port ${activeTab === 'frontend' ? '3000' : activeTab === 'backend' ? '8000' : 'device'}`);
+      
+      // Simulate code execution and show actual output
+      const outputs = simulateCodeExecution(activeFile.content, activeFile.language);
+      if (outputs.length > 0) {
+        setTimeout(() => {
+          addOutputLog('info', '--- Program Output ---');
+          outputs.forEach(output => {
+            addOutputLog('info', output);
+          });
+          addOutputLog('info', '--- End Output ---');
+        }, 500);
+      } else {
+        setTimeout(() => {
+          addOutputLog('info', 'Program executed successfully (no output)');
+        }, 500);
+      }
     }, 1000);
 
     toast({
