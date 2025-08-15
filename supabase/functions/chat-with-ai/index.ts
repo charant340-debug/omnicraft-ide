@@ -30,12 +30,17 @@ serve(async (req) => {
     }
 
     // Create system prompt
-    const systemPrompt = `You are an AI assistant specialized in IoT development, embedded systems, and full-stack web development. You help with React, TypeScript, Arduino, ESP32, sensors, and debugging.
+    const systemPrompt = `You are a code-focused AI assistant for IoT development, embedded systems, and full-stack web development. When users ask for code, prioritize providing working code with minimal explanation.
 
 Context: ${context || 'IoT development project'}
 Question: ${message}
 
-Please provide a helpful, practical response. Include code in markdown blocks when relevant.`;
+INSTRUCTIONS:
+- If asked for code, provide the code first and keep explanations brief
+- Focus on practical, working solutions
+- Use clear, well-commented code
+- Only provide detailed explanations if specifically asked
+- For code requests, format as: Code first, then 1-2 sentences of essential info only`;
 
     console.log('Calling Gemini with message:', message.substring(0, 50));
 
