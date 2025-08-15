@@ -42,7 +42,7 @@ export interface IDEState {
   
   // AI assistant
   isAIVisible: boolean;
-  aiMessages: Array<{ id: string; role: 'user' | 'assistant'; content: string; timestamp: Date }>;
+  aiMessages: Array<{ id: string; role: 'user' | 'assistant'; content: string; timestamp: Date; hasCodeSuggestion?: boolean; codeSuggestion?: string; targetFile?: string }>;
   
   // Actions
   setActiveTab: (tab: ProjectTab) => void;
@@ -61,7 +61,7 @@ export interface IDEState {
   connectDevice: (deviceType: string) => void;
   disconnectDevice: () => void;
   toggleAI: () => void;
-  addAIMessage: (role: 'user' | 'assistant', content: string) => void;
+  addAIMessage: (role: 'user' | 'assistant', content: string, options?: { hasCodeSuggestion?: boolean; codeSuggestion?: string; targetFile?: string }) => void;
 }
 
 const getLanguageFromFilename = (filename: string): string => {
@@ -322,14 +322,18 @@ export const useIDEStore = create<IDEState>((set, get) => ({
     isAIVisible: !state.isAIVisible 
   })),
 
-  addAIMessage: (role, content) => {
-    const { aiMessages } = get();
-    const newMessage = {
-      id: Date.now().toString(),
-      role,
-      content,
-      timestamp: new Date()
-    };
-    set({ aiMessages: [...aiMessages, newMessage] });
-  }
+    addAIMessage: (role, content, options) => {
+      const message = {
+        id: Date.now().toString(),
+        role,
+        content,
+        timestamp: new Date(),
+        hasCodeSuggestion: options?.hasCodeSuggestion,
+        codeSuggestion: options?.codeSuggestion,
+        targetFile: options?.targetFile,
+      };
+      set((state) => ({
+        aiMessages: [...state.aiMessages, message],
+      }));
+    },
 }));
