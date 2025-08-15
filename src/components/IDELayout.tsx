@@ -17,7 +17,8 @@ export const IDELayout: React.FC = () => {
     toggleAI, 
     toggleExplorer, 
     toggleOutput,
-    testAI 
+    testAI,
+    addOutputLog
   } = useIDEStore();
 
   return (
@@ -78,6 +79,18 @@ export const IDELayout: React.FC = () => {
           >
             🧪 Test AI
           </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              addOutputLog('info', 'Code execution started...');
+              setTimeout(() => addOutputLog('success', 'Build completed successfully!'), 1000);
+              setTimeout(() => addOutputLog('info', 'Server started on port 3000'), 1500);
+            }}
+            className="border-border hover:bg-file-hover"
+          >
+            ▶️ Run Code
+          </Button>
           <DeviceConnection />
         </div>
       </header>
@@ -93,11 +106,14 @@ export const IDELayout: React.FC = () => {
 
         {/* Code Editor Area */}
         <div className="flex-1 bg-editor min-w-0 flex flex-col h-full">
+          {/* Code Editor - Scrollable */}
           <div className="flex-1 overflow-hidden">
             <CodeEditor />
           </div>
+          
+          {/* Output Panel - Fixed at bottom when visible */}
           {isOutputVisible && (
-            <div className="h-80 flex-shrink-0">
+            <div className="h-64 flex-shrink-0 border-t border-border">
               <OutputPanel />
             </div>
           )}

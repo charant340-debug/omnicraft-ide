@@ -305,7 +305,10 @@ export const useIDEStore = create<IDEState>((set, get) => ({
       message,
       timestamp: new Date()
     };
-    set({ outputLogs: [...outputLogs, newLog] });
+    set({ 
+      outputLogs: [...outputLogs, newLog],
+      isOutputVisible: true // Auto-show output when logs are added
+    });
   },
 
   clearOutputLogs: () => set({ outputLogs: [] }),

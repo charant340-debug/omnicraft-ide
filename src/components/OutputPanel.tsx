@@ -31,7 +31,7 @@ export const OutputPanel: React.FC = () => {
   };
 
   return (
-    <div className="h-full bg-terminal border-t border-border flex flex-col">
+    <div className="h-full bg-terminal flex flex-col">
       {/* Header */}
       <div className="h-8 bg-panel-bg border-b border-border flex items-center justify-between px-3 flex-shrink-0">
         <div className="flex items-center space-x-2">
@@ -46,6 +46,7 @@ export const OutputPanel: React.FC = () => {
             onClick={clearOutputLogs}
             className="w-6 h-6 p-0 hover:bg-muted"
             disabled={outputLogs.length === 0}
+            title="Clear logs"
           >
             <Trash size={12} />
           </Button>
@@ -54,13 +55,14 @@ export const OutputPanel: React.FC = () => {
             size="sm"
             onClick={toggleOutput}
             className="w-6 h-6 p-0 hover:bg-muted"
+            title="Hide output"
           >
             <X size={12} />
           </Button>
         </div>
       </div>
 
-      {/* Output Content */}
+      {/* Output Content - Scrollable */}
       <div className="flex-1 overflow-y-auto p-2 font-mono text-sm bg-terminal">
         {outputLogs.length === 0 ? (
           <div className="text-muted-foreground text-center py-8">
