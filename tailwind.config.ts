@@ -26,7 +26,8 @@ export default {
 				foreground: 'hsl(var(--foreground))',
 				primary: {
 					DEFAULT: 'hsl(var(--primary))',
-					foreground: 'hsl(var(--primary-foreground))'
+					foreground: 'hsl(var(--primary-foreground))',
+					glow: 'hsl(var(--primary-glow))'
 				},
 				secondary: {
 					DEFAULT: 'hsl(var(--secondary))',
@@ -52,16 +53,29 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
-				sidebar: {
-					DEFAULT: 'hsl(var(--sidebar-background))',
-					foreground: 'hsl(var(--sidebar-foreground))',
-					primary: 'hsl(var(--sidebar-primary))',
-					'primary-foreground': 'hsl(var(--sidebar-primary-foreground))',
-					accent: 'hsl(var(--sidebar-accent))',
-					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
-					border: 'hsl(var(--sidebar-border))',
-					ring: 'hsl(var(--sidebar-ring))'
-				}
+				// IDE-specific colors
+				editor: 'hsl(var(--editor-background))',
+				'sidebar-bg': 'hsl(var(--sidebar-background))',
+				'panel-bg': 'hsl(var(--panel-background))',
+				'tab-active': 'hsl(var(--tab-active))',
+				'tab-inactive': 'hsl(var(--tab-inactive))',
+				'file-hover': 'hsl(var(--file-hover))',
+				success: 'hsl(var(--success))',
+				warning: 'hsl(var(--warning))',
+				info: 'hsl(var(--info))'
+			},
+			fontFamily: {
+				code: 'var(--font-code)',
+				ui: 'var(--font-ui)'
+			},
+			backgroundImage: {
+				'gradient-primary': 'var(--gradient-primary)',
+				'gradient-subtle': 'var(--gradient-subtle)',
+				'gradient-accent': 'var(--gradient-accent)'
+			},
+			boxShadow: {
+				panel: 'var(--shadow-panel)',
+				glow: 'var(--shadow-glow)'
 			},
 			borderRadius: {
 				lg: 'var(--radius)',

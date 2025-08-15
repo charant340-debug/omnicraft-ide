@@ -1,0 +1,141 @@
+import React from 'react';
+import Editor from '@monaco-editor/react';
+import { useIDEStore } from '../stores/ideStore';
+import { X, Circle } from '@phosphor-icons/react';
+import { Button } from './ui/button';
+
+export const CodeEditor: React.FC = () => {
+  const { 
+    openFiles, 
+    activeFileId, 
+    setActiveFile, 
+    closeFile, 
+    updateFileContent, 
+    saveFile 
+  } = useIDEStore();
+
+  const activeFile = openFiles.find(f => f.id === activeFileId);
+
+  const handleEditorChange = (value: string | undefined) => {
+    if (activeFileId && value !== undefined) {
+      updateFileContent(activeFileId, value);
+    }
+  };
+
+  const handleSave = () => {
+    if (activeFileId) {
+      saveFile(activeFileId);
+    }
+  };
+
+  // Handle Ctrl+S for save
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        handleSave();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [activeFileId]);
+
+  if (openFiles.length === 0) {
+    return (
+      <div className="h-full flex items-center justify-center bg-editor">
+        <div className="text-center">
+          <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+            <span className="text-2xl">📝</span>
+          </div>
+          <h3 className="text-lg font-medium text-foreground mb-2">No Files Open</h3>
+          <p className="text-muted-foreground">Open a file from the explorer to start coding</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="h-full flex flex-col bg-editor">
+      {/* Tabs */}
+      <div className="bg-tab-inactive border-b border-border flex overflow-x-auto">
+        {openFiles.map(file => (
+          <div
+            key={file.id}
+            className={`
+              flex items-center space-x-2 px-4 py-2 border-r border-border cursor-pointer group
+              ${file.id === activeFileId 
+                ? 'bg-tab-active text-foreground' 
+                : 'bg-tab-inactive text-muted-foreground hover:text-foreground hover:bg-file-hover'
+              }
+            `}
+            onClick={() => setActiveFile(file.id)}
+          >
+            <Circle 
+              size={8} 
+              weight={file.isDirty ? 'fill' : 'bold'}
+              className={file.isDirty ? 'text-warning' : 'text-muted-foreground'} 
+            />
+            <span className="text-sm select-none">{file.name}</span>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                closeFile(file.id);
+              }}
+              className="opacity-0 group-hover:opacity-100 w-4 h-4 p-0 hover:bg-muted"
+            >
+              <X size={12} />
+            </Button>
+          </div>
+        ))}
+      </div>
+
+      {/* Editor */}
+      <div className="flex-1">
+        {activeFile && (
+          <Editor
+            height="100%"
+            defaultLanguage={activeFile.language}
+            language={activeFile.language}
+            value={activeFile.content}
+            onChange={handleEditorChange}
+            theme="vs-dark"
+            options={{
+              fontFamily: 'var(--font-code)',
+              fontSize: 14,
+              lineHeight: 1.5,
+              minimap: { enabled: false },
+              scrollBeyondLastLine: false,
+              wordWrap: 'on',
+              automaticLayout: true,
+              tabSize: 2,
+              insertSpaces: true,
+              renderWhitespace: 'selection',
+              bracketPairColorization: { enabled: true },
+              guides: {
+                bracketPairs: true,
+                indentation: true
+              }
+            }}
+          />
+        )}
+      </div>
+
+      {/* Status Bar */}
+      {activeFile && (
+        <div className="h-6 bg-panel-bg border-t border-border flex items-center justify-between px-4 text-xs text-muted-foreground">
+          <div className="flex items-center space-x-4">
+            <span>{activeFile.language}</span>
+            <span>{activeFile.path}</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            {activeFile.isDirty && <span className="text-warning">Unsaved</span>}
+            <span>Ctrl+S to save</span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
