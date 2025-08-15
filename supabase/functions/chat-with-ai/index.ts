@@ -35,7 +35,7 @@ serve(async (req) => {
 STRICT RULES:
 - For code requests: Provide ONLY the code in proper markdown code blocks
 - No lengthy explanations unless specifically asked
-- Use proper syntax highlighting (```python, ```javascript, etc.)
+- Use proper syntax highlighting with code fences
 - Keep responses concise and code-focused
 - Always format code for readability with proper indentation
 
