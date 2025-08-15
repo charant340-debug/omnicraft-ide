@@ -72,42 +72,92 @@ export const CodeEditor: React.FC = () => {
     return outputs;
   };
 
+  const simulateEmbeddedREPL = () => {
+    // Simulate embedded device REPL interaction
+    const replCommands = [
+      { delay: 500, type: 'info', message: '>>> Connecting to device...' },
+      { delay: 1000, type: 'success', message: 'MicroPython v1.20.0 on 2023-04-26; ESP32 module with ESP32' },
+      { delay: 1200, type: 'info', message: 'Type "help()" for more information.' },
+      { delay: 1400, type: 'info', message: '>>> ' },
+    ];
+
+    // Execute commands with delays
+    replCommands.forEach(({ delay, type, message }) => {
+      setTimeout(() => {
+        addOutputLog(type as 'info' | 'error' | 'success', message);
+      }, delay);
+    });
+
+    // Simulate running the actual code
+    if (activeFile) {
+      const outputs = simulateCodeExecution(activeFile.content, activeFile.language);
+      
+      setTimeout(() => {
+        addOutputLog('info', '>>> exec(open("main.py").read())');
+        
+        if (outputs.length > 0) {
+          outputs.forEach((output, index) => {
+            setTimeout(() => {
+              addOutputLog('info', output);
+            }, 200 + (index * 100));
+          });
+        }
+        
+        // Simulate device-specific outputs
+        setTimeout(() => {
+          addOutputLog('success', 'LED blink pattern started');
+          addOutputLog('info', 'Device ready for commands');
+          addOutputLog('info', '>>> ');
+        }, 500 + (outputs.length * 100));
+        
+      }, 2000);
+    }
+  };
+
   const handleRunCurrent = () => {
     if (!activeFile) return;
     
+    // Show output panel first
     addOutputLog('info', `Starting ${activeTab} project...`);
-    toggleOutput(); // Show output panel
     
-    // Simulate compilation/setup time
-    setTimeout(() => {
-      addOutputLog('success', `${activeTab} project started successfully on port ${activeTab === 'frontend' ? '3000' : activeTab === 'backend' ? '8000' : 'device'}`);
-      
-      // Simulate code execution and show actual output
-      const outputs = simulateCodeExecution(activeFile.content, activeFile.language);
-      if (outputs.length > 0) {
-        setTimeout(() => {
-          addOutputLog('info', '--- Program Output ---');
-          outputs.forEach(output => {
-            addOutputLog('info', output);
-          });
-          addOutputLog('info', '--- End Output ---');
-        }, 500);
-      } else {
-        setTimeout(() => {
-          addOutputLog('info', 'Program executed successfully (no output)');
-        }, 500);
-      }
-    }, 1000);
+    if (activeTab === 'embedded') {
+      // Handle embedded device as REPL
+      simulateEmbeddedREPL();
+      toast({
+        title: "Connecting to Device",
+        description: "Establishing REPL connection...",
+      });
+    } else {
+      // Handle frontend/backend normally
+      setTimeout(() => {
+        addOutputLog('success', `${activeTab} project started successfully on port ${activeTab === 'frontend' ? '3000' : '8000'}`);
+        
+        // Simulate code execution and show actual output
+        const outputs = simulateCodeExecution(activeFile.content, activeFile.language);
+        if (outputs.length > 0) {
+          setTimeout(() => {
+            addOutputLog('info', '--- Program Output ---');
+            outputs.forEach(output => {
+              addOutputLog('info', output);
+            });
+            addOutputLog('info', '--- End Output ---');
+          }, 500);
+        } else {
+          setTimeout(() => {
+            addOutputLog('info', 'Program executed successfully (no output)');
+          }, 500);
+        }
+      }, 1000);
 
-    toast({
-      title: `Running ${activeTab}`,
-      description: `Starting ${activeTab} project...`,
-    });
+      toast({
+        title: `Running ${activeTab}`,
+        description: `Starting ${activeTab} project...`,
+      });
+    }
   };
 
   const handleRunAll = () => {
     addOutputLog('info', 'Starting all projects...');
-    toggleOutput(); // Show output panel
     
     // Simulate running all projects
     setTimeout(() => {
@@ -117,7 +167,10 @@ export const CodeEditor: React.FC = () => {
       addOutputLog('success', 'Backend started on port 8000');
     }, 1000);
     setTimeout(() => {
-      addOutputLog('success', 'Embedded code deployed to device');
+      addOutputLog('info', '>>> Connecting to embedded device...');
+      addOutputLog('success', 'MicroPython v1.20.0 on ESP32 module');
+      addOutputLog('info', 'Device ready - REPL active');
+      addOutputLog('info', '>>> ');
     }, 1500);
 
     toast({
