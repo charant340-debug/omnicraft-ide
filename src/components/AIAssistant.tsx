@@ -169,38 +169,53 @@ export const AIAssistant: React.FC = () => {
                   ) : (
                     <div className="w-full">
                       {message.hasCodeSuggestion && message.codeSuggestion ? (
-                        // Code-focused display
-                        <div className="bg-editor border border-border rounded-lg overflow-hidden">
-                          <div className="bg-panel-header px-4 py-2 border-b border-border">
+                        // Professional code assistant display - no chat bubble
+                        <div className="w-full mb-6">
+                          {/* File header bar */}
+                          <div className="bg-panel-header border border-border rounded-t-lg px-4 py-3">
                             <div className="flex items-center justify-between">
-                              <div className="flex items-center space-x-2">
-                                <Code size={16} className="text-accent" />
-                                <span className="text-sm font-medium text-foreground">Code Solution</span>
-                                {message.targetFile && (
-                                  <span className="text-xs text-muted-foreground">for {message.targetFile}</span>
-                                )}
+                              <div className="flex items-center space-x-3">
+                                <div className="w-8 h-8 bg-gradient-primary rounded-md flex items-center justify-center">
+                                  <Code size={16} className="text-background" />
+                                </div>
+                                <div>
+                                  <div className="font-medium text-foreground">AI Generated Code</div>
+                                  {message.targetFile && (
+                                    <div className="text-xs text-muted-foreground">{message.targetFile}</div>
+                                  )}
+                                </div>
                               </div>
                               <Button
-                                size="sm"
-                                className="bg-success hover:bg-success/80 text-white"
+                                size="default"
+                                className="bg-primary hover:bg-primary-glow text-primary-foreground font-medium px-6"
                                 onClick={() => handleAcceptSuggestion(message.codeSuggestion!)}
                               >
-                                <Check size={12} className="mr-1" />
-                                Apply to File
+                                <Check size={16} className="mr-2" />
+                                Apply Code
                               </Button>
                             </div>
                           </div>
-                          <div className="relative">
-                            <pre className="bg-editor p-4 overflow-x-auto text-sm font-code text-foreground">
+                          
+                          {/* Code block */}
+                          <div className="bg-editor border-x border-b border-border rounded-b-lg">
+                            <pre className="p-6 overflow-x-auto text-sm font-mono leading-relaxed text-foreground">
                               <code>{message.codeSuggestion}</code>
                             </pre>
                           </div>
+                          
+                          {/* Optional explanation */}
                           {message.content && message.content.trim() && !message.content.includes('```') && (
-                            <div className="px-4 py-2 text-xs text-muted-foreground border-t border-border bg-muted/50">
-                              {message.content.replace(/```[\s\S]*?```/g, '').trim()}
+                            <div className="mt-3 p-4 bg-muted/30 border border-border rounded-lg">
+                              <div className="flex items-start space-x-2">
+                                <Robot size={16} className="mt-0.5 text-accent flex-shrink-0" />
+                                <p className="text-sm text-muted-foreground">
+                                  {message.content.replace(/```[\s\S]*?```/g, '').trim()}
+                                </p>
+                              </div>
                             </div>
                           )}
-                          <div className="px-4 py-1 text-xs text-muted-foreground bg-muted/30">
+                          
+                          <div className="text-xs text-muted-foreground mt-2">
                             {formatTimestamp(message.timestamp)}
                           </div>
                         </div>
