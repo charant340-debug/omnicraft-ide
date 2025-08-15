@@ -168,7 +168,7 @@ export const AIAssistant: React.FC = () => {
                     </div>
                   ) : (
                     <div className="w-full">
-                      {message.hasCodeSuggestion && message.codeSuggestion ? (
+                      {message.hasCodeSuggestion && message.codeSuggestion && message.codeSuggestion.trim() ? (
                         // Professional code assistant display - no chat bubble
                         <div className="w-full mb-6">
                           {/* File header bar */}
@@ -188,7 +188,10 @@ export const AIAssistant: React.FC = () => {
                               <Button
                                 size="default"
                                 className="bg-primary hover:bg-primary-glow text-primary-foreground font-medium px-6"
-                                onClick={() => handleAcceptSuggestion(message.codeSuggestion!)}
+                                onClick={() => {
+                                  console.log('Applying code:', message.codeSuggestion);
+                                  handleAcceptSuggestion(message.codeSuggestion!);
+                                }}
                               >
                                 <Check size={16} className="mr-2" />
                                 Apply Code
