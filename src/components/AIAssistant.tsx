@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../lib/supabase';
 import { useIDEStore } from '../stores/ideStore';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
@@ -53,10 +54,11 @@ export const AIAssistant: React.FC = () => {
         `Working on file: ${activeFile.name} (${activeFile.language})\n${activeFile.content.slice(0, 500)}...` : 
         'Working on an IoT development project';
 
-      const response = await fetch('/functions/v1/chat-with-ai', {
+      const response = await fetch(`${SUPABASE_URL}/functions/v1/chat-with-ai`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
         },
         body: JSON.stringify({
           message: userMessage,
