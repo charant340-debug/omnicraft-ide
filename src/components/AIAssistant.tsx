@@ -169,57 +169,82 @@ export const AIAssistant: React.FC = () => {
                   ) : (
                     <div className="w-full">
                       {message.hasCodeSuggestion && message.codeSuggestion && message.codeSuggestion.trim() ? (
-                        // Professional code assistant display - no chat bubble
+                        // Lovable-style code suggestion with confirmation
                         <div className="w-full mb-6">
-                          {/* File header bar */}
-                          <div className="bg-panel-header border border-border rounded-t-lg px-4 py-3">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center space-x-3">
-                                <div className="w-8 h-8 bg-gradient-primary rounded-md flex items-center justify-center">
-                                  <Code size={16} className="text-background" />
-                                </div>
-                                <div>
-                                  <div className="font-medium text-foreground">AI Generated Code</div>
-                                  {message.targetFile && (
-                                    <div className="text-xs text-muted-foreground">{message.targetFile}</div>
-                                  )}
-                                </div>
-                              </div>
-                              <Button
-                                size="default"
-                                className="bg-primary hover:bg-primary-glow text-primary-foreground font-medium px-6"
-                                onClick={() => {
-                                  console.log('Applying code:', message.codeSuggestion);
-                                  handleAcceptSuggestion(message.codeSuggestion!);
-                                }}
-                              >
-                                <Check size={16} className="mr-2" />
-                                Apply Code
-                              </Button>
-                            </div>
-                          </div>
-                          
-                          {/* Code block */}
-                          <div className="bg-editor border-x border-b border-border rounded-b-lg">
-                            <pre className="p-6 overflow-x-auto text-sm font-mono leading-relaxed text-foreground whitespace-pre-wrap">
-                              <code>{message.codeSuggestion?.trim()}</code>
-                            </pre>
-                          </div>
-                          
-                          {/* Optional explanation */}
+                          {/* Documentation-style explanation */}
                           {message.content && message.content.trim() && !message.content.includes('```') && (
-                            <div className="mt-3 p-4 bg-muted/30 border border-border rounded-lg">
-                              <div className="flex items-start space-x-2">
-                                <Robot size={16} className="mt-0.5 text-accent flex-shrink-0" />
-                                <p className="text-sm text-muted-foreground">
-                                  {message.content.replace(/```[\s\S]*?```/g, '').trim()}
-                                </p>
+                            <div className="mb-4 p-4 bg-muted/20 border border-border rounded-lg">
+                              <div className="flex items-start space-x-3">
+                                <div className="w-6 h-6 bg-gradient-primary rounded-md flex items-center justify-center flex-shrink-0 mt-0.5">
+                                  <Robot size={12} className="text-background" />
+                                </div>
+                                <div className="flex-1">
+                                  <h4 className="font-medium text-foreground mb-2">AI Suggestion</h4>
+                                  <div className="text-sm text-muted-foreground prose prose-sm max-w-none">
+                                    {message.content.replace(/```[\s\S]*?```/g, '').trim()}
+                                  </div>
+                                </div>
                               </div>
                             </div>
                           )}
-                          
-                          <div className="text-xs text-muted-foreground mt-2">
-                            {formatTimestamp(message.timestamp)}
+
+                          {/* Code suggestion card */}
+                          <div className="bg-card border border-border rounded-lg overflow-hidden">
+                            {/* Header */}
+                            <div className="bg-muted/40 border-b border-border px-4 py-3">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center space-x-3">
+                                  <div className="w-8 h-8 bg-gradient-primary rounded-md flex items-center justify-center">
+                                    <Code size={16} className="text-background" />
+                                  </div>
+                                  <div>
+                                    <div className="font-medium text-foreground">Code Suggestion</div>
+                                    {message.targetFile && (
+                                      <div className="text-xs text-muted-foreground">{message.targetFile}</div>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="text-xs text-muted-foreground">
+                                  {formatTimestamp(message.timestamp)}
+                                </div>
+                              </div>
+                            </div>
+                            
+                            {/* Code block */}
+                            <div className="bg-editor">
+                              <pre className="p-6 overflow-x-auto text-sm font-mono leading-relaxed text-foreground whitespace-pre-wrap">
+                                <code>{message.codeSuggestion?.trim()}</code>
+                              </pre>
+                            </div>
+
+                            {/* Action buttons */}
+                            <div className="bg-muted/20 border-t border-border px-4 py-3">
+                              <div className="flex items-center justify-between">
+                                <p className="text-sm text-muted-foreground">
+                                  Do you want to apply this code to {message.targetFile || 'your file'}?
+                                </p>
+                                <div className="flex items-center space-x-2">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="text-muted-foreground"
+                                  >
+                                    Dismiss
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    className="bg-primary hover:bg-primary-glow text-primary-foreground"
+                                    onClick={() => {
+                                      console.log('Applying code:', message.codeSuggestion);
+                                      handleAcceptSuggestion(message.codeSuggestion!);
+                                    }}
+                                  >
+                                    <Check size={14} className="mr-1.5" />
+                                    Accept & Apply
+                                  </Button>
+                                </div>
+                              </div>
+                            </div>
                           </div>
                         </div>
                       ) : (
