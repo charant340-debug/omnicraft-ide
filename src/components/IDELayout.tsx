@@ -22,7 +22,7 @@ export const IDELayout: React.FC = () => {
   } = useIDEStore();
 
   return (
-    <div className="min-h-screen bg-background font-ui flex flex-col">
+    <div className="h-screen bg-background font-ui flex flex-col overflow-hidden">
       {/* Top Bar - Fixed */}
       <header className="fixed top-0 left-0 right-0 h-12 bg-panel-bg border-b border-border flex items-center justify-between px-4 shadow-panel z-50">
         <div className="flex items-center space-x-4">
@@ -96,7 +96,7 @@ export const IDELayout: React.FC = () => {
       </header>
 
       {/* Main Content - Account for fixed header */}
-      <div className="flex flex-1 overflow-hidden pt-12">
+      <div className="flex flex-1 overflow-hidden pt-12 h-full">
         {/* File Explorer */}
         {!isExplorerCollapsed && (
           <div className="w-80 bg-sidebar-bg border-r border-border flex-shrink-0 h-full overflow-hidden">
