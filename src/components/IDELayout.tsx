@@ -106,8 +106,8 @@ export const IDELayout: React.FC = () => {
 
         {/* Code Editor Area */}
         <div className="flex-1 bg-editor min-w-0 flex flex-col h-full">
-          {/* Code Editor - Scrollable */}
-          <div className="flex-1 overflow-hidden">
+          {/* Code Editor - Scrollable with minimum height */}
+          <div className={`${isOutputVisible ? 'flex-1 min-h-0' : 'flex-1'} overflow-hidden`}>
             <CodeEditor />
           </div>
           

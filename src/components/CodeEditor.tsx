@@ -154,7 +154,7 @@ export const CodeEditor: React.FC = () => {
   }
 
   return (
-    <div className="h-full flex flex-col bg-editor">
+    <div className="h-full flex flex-col bg-editor min-h-0">
       {/* Tabs */}
       <div className="bg-tab-inactive border-b border-border flex overflow-x-auto">
         {openFiles.map(file => (
@@ -218,7 +218,7 @@ export const CodeEditor: React.FC = () => {
       </div>
 
       {/* Editor */}
-      <div className="flex-1 w-full h-full">
+      <div className="flex-1 min-h-0 w-full overflow-hidden">
         {activeFile && (
           <Editor
             height="100%"
