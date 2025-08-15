@@ -6,7 +6,7 @@ import { AIAssistant } from './AIAssistant';
 import { TabBar } from './TabBar';
 import { DeviceConnection } from './DeviceConnection';
 import { useIDEStore } from '../stores/ideStore';
-import { Robot, Sparkle, SidebarSimple, Terminal } from '@phosphor-icons/react';
+import { Robot, Sparkle, SidebarSimple } from '@phosphor-icons/react';
 import { Button } from './ui/button';
 
 export const IDELayout: React.FC = () => {
@@ -35,24 +35,6 @@ export const IDELayout: React.FC = () => {
           <TabBar />
         </div>
         <div className="flex items-center space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={toggleExplorer}
-            className="border-border hover:bg-file-hover"
-          >
-            <SidebarSimple size={16} className="mr-2" />
-            {isExplorerCollapsed ? 'Show' : 'Hide'} Explorer
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={toggleOutput}
-            className="border-border hover:bg-file-hover"
-          >
-            <Terminal size={16} className="mr-2" />
-            {isOutputVisible ? 'Hide' : 'Show'} Output
-          </Button>
           <Button
             variant={isAIVisible ? "default" : "outline"}
             size="sm"
@@ -99,8 +81,30 @@ export const IDELayout: React.FC = () => {
       <div className="flex flex-1 overflow-hidden pt-12 h-full">
         {/* File Explorer */}
         {!isExplorerCollapsed && (
-          <div className="w-80 bg-sidebar-bg border-r border-border flex-shrink-0 h-full overflow-hidden">
+          <div className="w-80 bg-sidebar-bg border-r border-border flex-shrink-0 h-full overflow-hidden relative">
             <FileExplorer />
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={toggleExplorer}
+              className="absolute top-1/2 -right-3 transform -translate-y-1/2 w-6 h-8 p-0 bg-sidebar-bg border border-border rounded-md hover:bg-file-hover z-10"
+            >
+              <SidebarSimple size={12} className="rotate-180" />
+            </Button>
+          </div>
+        )}
+        
+        {/* Collapsed Explorer Toggle */}
+        {isExplorerCollapsed && (
+          <div className="w-0 relative">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={toggleExplorer}
+              className="absolute top-1/2 left-0 transform -translate-y-1/2 w-6 h-8 p-0 bg-sidebar-bg border border-border rounded-r-md hover:bg-file-hover z-10"
+            >
+              <SidebarSimple size={12} />
+            </Button>
           </div>
         )}
 
