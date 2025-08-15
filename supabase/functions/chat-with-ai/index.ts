@@ -12,103 +12,101 @@ serve(async (req) => {
   }
 
   try {
-    console.log('=== GEMINI API TEST START ===');
+    const { message, context } = await req.json();
     
-    const geminiKey = Deno.env.get('GEMINI_API_KEY');
-    console.log('API Key status:', geminiKey ? `Found (${geminiKey.length} chars)` : 'NOT FOUND');
-    
-    if (!geminiKey) {
+    if (!message) {
       return new Response(
-        JSON.stringify({ error: 'Gemini API key not found' }),
+        JSON.stringify({ error: 'Message is required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Test 1: Simple API availability check
-    console.log('TEST 1: Checking Gemini API availability...');
-    const testUrl = `https://generativelanguage.googleapis.com/v1beta/models?key=${geminiKey}`;
-    
-    try {
-      const modelsResponse = await fetch(testUrl);
-      console.log('Models API status:', modelsResponse.status);
-      
-      if (modelsResponse.ok) {
-        const modelsData = await modelsResponse.text();
-        console.log('Available models response (first 200 chars):', modelsData.substring(0, 200));
-      } else {
-        console.log('Models API failed:', await modelsResponse.text());
-      }
-    } catch (error) {
-      console.log('Models API error:', error.message);
+    const geminiKey = Deno.env.get('GEMINI_API_KEY');
+    if (!geminiKey) {
+      return new Response(
+        JSON.stringify({ error: 'Gemini API key not configured' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
-    // Test 2: Simple content generation
-    console.log('TEST 2: Testing content generation...');
-    const generateUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`;
-    
-    const testRequest = {
-      contents: [{
-        parts: [{
-          text: "Say hello and confirm you are working"
-        }]
-      }]
-    };
+    // Create system prompt
+    const systemPrompt = `You are an AI assistant specialized in IoT development, embedded systems, and full-stack web development. You help with React, TypeScript, Arduino, ESP32, sensors, and debugging.
 
-    console.log('Making generation request to:', generateUrl.replace(geminiKey, 'API_KEY_HIDDEN'));
-    console.log('Request body:', JSON.stringify(testRequest, null, 2));
+Context: ${context || 'IoT development project'}
+Question: ${message}
 
-    const generateResponse = await fetch(generateUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(testRequest)
-    });
+Please provide a helpful, practical response. Include code in markdown blocks when relevant.`;
 
-    console.log('Generate response status:', generateResponse.status);
-    console.log('Generate response headers:', Object.fromEntries(generateResponse.headers.entries()));
+    console.log('Calling Gemini with message:', message.substring(0, 50));
 
-    const responseBody = await generateResponse.text();
-    console.log('Generate response body:', responseBody);
-
-    let result = {
-      test_results: {
-        api_key_present: !!geminiKey,
-        generation_status: generateResponse.status,
-        generation_ok: generateResponse.ok
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: systemPrompt }] }],
+          generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: 1000
+          }
+        })
       }
-    };
+    );
 
-    if (generateResponse.ok) {
-      try {
-        const data = JSON.parse(responseBody);
-        const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-        result.generated_text = generatedText;
-        result.success = true;
-        console.log('SUCCESS: Generated text:', generatedText);
-      } catch (parseError) {
-        result.parse_error = parseError.message;
-        result.raw_response = responseBody;
-      }
-    } else {
-      result.error = responseBody;
-      result.success = false;
+    console.log('Gemini response status:', response.status);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.log('Gemini error:', errorText);
+      return new Response(
+        JSON.stringify({ error: 'AI service temporarily unavailable' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
-    console.log('=== GEMINI API TEST END ===');
+    const data = await response.json();
+    console.log('Gemini response structure:', JSON.stringify(data, null, 2));
+
+    // Try multiple ways to extract the text
+    let aiResponse = null;
+
+    // Method 1: Standard path
+    if (data.candidates?.[0]?.content?.parts?.[0]?.text) {
+      aiResponse = data.candidates[0].content.parts[0].text;
+    }
+    // Method 2: Alternative structure
+    else if (data.candidates?.[0]?.output) {
+      aiResponse = data.candidates[0].output;
+    }
+    // Method 3: Direct text field
+    else if (data.text) {
+      aiResponse = data.text;
+    }
+    // Method 4: Look for any text in the response
+    else {
+      const textMatch = JSON.stringify(data).match(/"text":\s*"([^"]+)"/);
+      if (textMatch) {
+        aiResponse = textMatch[1];
+      }
+    }
+
+    if (!aiResponse) {
+      console.log('No text found in response:', JSON.stringify(data, null, 2));
+      aiResponse = 'I received your message but had trouble generating a response. Please try again.';
+    }
+
+    console.log('Final AI response:', aiResponse.substring(0, 100));
 
     return new Response(
-      JSON.stringify(result, null, 2),
+      JSON.stringify({ response: aiResponse }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error) {
-    console.error('TEST CRASHED:', error);
+    console.error('Function error:', error);
     return new Response(
-      JSON.stringify({ 
-        error: `Test failed: ${error.message}`,
-        stack: error.stack
-      }),
+      JSON.stringify({ error: `Error: ${error.message}` }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
