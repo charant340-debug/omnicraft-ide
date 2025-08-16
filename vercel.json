@@ -6,6 +6,10 @@
         {
           "key": "Permissions-Policy",
           "value": "serial=(self)"
+        },
+        {
+          "key": "X-Debug",
+          "value": "vercel-json-active"
         }
       ]
     }
