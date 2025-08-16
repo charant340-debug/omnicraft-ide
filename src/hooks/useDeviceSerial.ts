@@ -13,17 +13,47 @@ export const useDeviceSerial = () => {
   const deviceRef = useRef<SerialDevice>({ port: null, reader: null, writer: null });
   const { toast } = useToast();
 
+  const isInIframe = () => {
+    try {
+      return window.self !== window.top;
+    } catch (e) {
+      return true;
+    }
+  };
+
   const connectToDevice = async (): Promise<boolean> => {
+    setIsConnecting(true);
+    
+    // Check if we're in an iframe (like Lovable preview)
+    if (isInIframe()) {
+      // Simulate connection for preview environment
+      toast({
+        title: "Preview Mode",
+        description: "Device connection simulated for preview. Real devices work when deployed.",
+      });
+      
+      setTimeout(() => {
+        setIsConnected(true);
+        toast({
+          title: "Device Connected (Simulated)",
+          description: "Simulated ESP32 connection ready",
+        });
+      }, 1000);
+      
+      setIsConnecting(false);
+      return true;
+    }
+
+    // Real WebSerial connection for deployed app
     if (!('serial' in navigator)) {
       toast({
         title: "WebSerial Not Supported",
         description: "Your browser doesn't support WebSerial API. Please use Chrome or Edge.",
         variant: "destructive"
       });
+      setIsConnecting(false);
       return false;
     }
-
-    setIsConnecting(true);
     
     try {
       // Request a port
