@@ -4,12 +4,14 @@ import { useIDEStore } from '../stores/ideStore';
 import { X, Circle, Play, PlayCircle } from '@phosphor-icons/react';
 import { Button } from './ui/button';
 import { useToast } from './ui/use-toast';
+import { useDeviceSerial } from '../hooks/useDeviceSerial';
 
 export const CodeEditor: React.FC = () => {
   const { 
     openFiles, 
     activeFileId, 
     activeTab,
+    isDeviceConnected,
     setActiveFile, 
     closeFile, 
     updateFileContent, 
@@ -17,6 +19,7 @@ export const CodeEditor: React.FC = () => {
     addOutputLog,
     toggleOutput
   } = useIDEStore();
+  const { isConnected, executeCode, uploadFile } = useDeviceSerial();
   const { toast } = useToast();
 
   const activeFile = openFiles.find(f => f.id === activeFileId);
@@ -229,19 +232,64 @@ export const CodeEditor: React.FC = () => {
     }
   };
 
-  const handleRunCurrent = () => {
+  const handleRunCurrent = async () => {
     if (!activeFile) return;
     
     // Show output panel first
     addOutputLog('info', `Starting ${activeTab} project...`);
     
     if (activeTab === 'embedded') {
-      // Handle embedded device as REPL
-      simulateEmbeddedREPL();
-      toast({
-        title: "Connecting to Device",
-        description: "Establishing REPL connection...",
-      });
+      if (isConnected && isDeviceConnected) {
+        // Execute on actual device
+        try {
+          addOutputLog('info', '>>> Connecting to device...');
+          
+          // First upload the file to device if it's main.py or boot.py
+          if (activeFile.name === 'main.py' || activeFile.name === 'boot.py') {
+            addOutputLog('info', `>>> Uploading ${activeFile.name} to device...`);
+            await uploadFile(activeFile.name, activeFile.content);
+            addOutputLog('success', `>>> ${activeFile.name} uploaded successfully`);
+          }
+          
+          // Execute the code on device
+          addOutputLog('info', '>>> Executing code...');
+          const outputs = await executeCode(activeFile.content);
+          
+          if (outputs.length > 0) {
+            outputs.forEach(output => {
+              if (output.trim()) {
+                addOutputLog('info', output);
+              }
+            });
+          } else {
+            addOutputLog('info', 'Code executed successfully (no output)');
+          }
+          
+          addOutputLog('success', '>>> Execution completed');
+          
+          toast({
+            title: "Code Executed",
+            description: "Code executed successfully on device",
+          });
+          
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+          addOutputLog('error', `>>> Error: ${errorMessage}`);
+          toast({
+            title: "Execution Failed",
+            description: errorMessage,
+            variant: "destructive"
+          });
+        }
+      } else {
+        // Device not connected - show warning
+        addOutputLog('error', '>>> No device connected! Please connect a device first.');
+        toast({
+          title: "Device Not Connected",
+          description: "Please connect a device to execute embedded code",
+          variant: "destructive"
+        });
+      }
     } else {
       // Handle frontend/backend normally
       setTimeout(() => {

@@ -2,31 +2,27 @@ import React from 'react';
 import { useIDEStore } from '../stores/ideStore';
 import { Button } from './ui/button';
 import { Usb } from '@phosphor-icons/react';
+import { useToast } from './ui/use-toast';
+import { useDeviceSerial } from '../hooks/useDeviceSerial';
 
 export const DeviceConnection: React.FC = () => {
   const { isDeviceConnected, deviceType, connectDevice, disconnectDevice } = useIDEStore();
+  const { isConnected, isConnecting, connectToDevice, disconnectFromDevice } = useDeviceSerial();
+  const { toast } = useToast();
 
   const handleConnect = async () => {
-    try {
-      // Check if WebSerial is supported
-      if ('serial' in navigator) {
-        // Request a port
-        const port = await (navigator as any).serial.requestPort();
-        connectDevice('ESP32');
-      } else {
-        // Fallback - just simulate connection
-        connectDevice('ESP32');
-      }
-    } catch (error) {
-      console.log('User cancelled device selection');
+    const success = await connectToDevice();
+    if (success) {
+      connectDevice('ESP32');
     }
   };
 
-  const handleDisconnect = () => {
+  const handleDisconnect = async () => {
+    await disconnectFromDevice();
     disconnectDevice();
   };
 
-  if (isDeviceConnected) {
+  if (isConnected && isDeviceConnected) {
     return (
       <div className="flex items-center space-x-3">
         <div className="flex items-center space-x-2 px-3 py-1.5 bg-success/20 text-success rounded-md">
@@ -50,11 +46,12 @@ export const DeviceConnection: React.FC = () => {
     <div className="flex items-center space-x-2">
       <Button
         onClick={handleConnect}
+        disabled={isConnecting}
         className="bg-primary hover:bg-primary-glow text-primary-foreground shadow-glow"
         size="sm"
       >
         <Usb size={16} className="mr-2" />
-        Connect Device
+        {isConnecting ? 'Connecting...' : 'Connect Device'}
       </Button>
     </div>
   );
