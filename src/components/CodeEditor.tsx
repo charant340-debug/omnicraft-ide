@@ -5,6 +5,7 @@ import { X, Circle, Play, PlayCircle } from '@phosphor-icons/react';
 import { Button } from './ui/button';
 import { useToast } from './ui/use-toast';
 import { useDeviceSerial } from '../hooks/useDeviceSerial';
+import { useElectronSerial } from '../hooks/useElectronSerial';
 
 export const CodeEditor: React.FC = () => {
   const { 
@@ -19,8 +20,14 @@ export const CodeEditor: React.FC = () => {
     addOutputLog,
     toggleOutput
   } = useIDEStore();
-  const { isConnected, executeCode, uploadFile } = useDeviceSerial();
+  
+  const webSerial = useDeviceSerial();
+  const electronSerial = useElectronSerial();
   const { toast } = useToast();
+  
+  // Use Electron serial when available, fallback to WebSerial
+  const isElectron = typeof window !== 'undefined' && window.electronAPI;
+  const deviceSerial = isElectron ? electronSerial : webSerial;
 
   const activeFile = openFiles.find(f => f.id === activeFileId);
 
@@ -239,7 +246,7 @@ export const CodeEditor: React.FC = () => {
     addOutputLog('info', `Starting ${activeTab} project...`);
     
     if (activeTab === 'embedded') {
-      if (isConnected && isDeviceConnected) {
+      if (deviceSerial.isConnected && isDeviceConnected) {
         // Execute on actual device
         try {
           addOutputLog('info', '>>> Connecting to device...');
@@ -247,15 +254,17 @@ export const CodeEditor: React.FC = () => {
           // First upload the file to device if it's main.py or boot.py
           if (activeFile.name === 'main.py' || activeFile.name === 'boot.py') {
             addOutputLog('info', `>>> Uploading ${activeFile.name} to device...`);
-            await uploadFile(activeFile.name, activeFile.content);
+            await deviceSerial.uploadFile(activeFile.name, activeFile.content);
             addOutputLog('success', `>>> ${activeFile.name} uploaded successfully`);
           }
           
           // Execute the code on device
           addOutputLog('info', '>>> Executing code...');
-          const outputs = await executeCode(activeFile.content);
+          const outputs = await deviceSerial.executeCode(activeFile.content);
           
-          if (outputs.length > 0) {
+          if (typeof outputs === 'string' && outputs.length > 0) {
+            addOutputLog('info', outputs);
+          } else if (Array.isArray(outputs) && outputs.length > 0) {
             outputs.forEach(output => {
               if (output.trim()) {
                 addOutputLog('info', output);
@@ -269,7 +278,7 @@ export const CodeEditor: React.FC = () => {
           
           toast({
             title: "Code Executed",
-            description: "Code executed successfully on device",
+            description: `Code executed successfully on ${isElectron ? 'desktop' : 'web'} device`,
           });
           
         } catch (error) {
@@ -286,7 +295,7 @@ export const CodeEditor: React.FC = () => {
         addOutputLog('error', '>>> No device connected! Please connect a device first.');
         toast({
           title: "Device Not Connected",
-          description: "Please connect a device to execute embedded code",
+          description: `Please connect a device to execute embedded code (${isElectron ? 'Desktop' : 'Web'} mode)`,
           variant: "destructive"
         });
       }
