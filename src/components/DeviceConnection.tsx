@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { useIDEStore } from '../stores/ideStore';
 import { Button } from './ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Usb, ArrowClockwise } from '@phosphor-icons/react';
+import { Usb } from '@phosphor-icons/react';
+import { RotateCcw } from 'lucide-react';
 import { useToast } from './ui/use-toast';
 import { useElectronSerial } from '../hooks/useElectronSerial';
 import { useDeviceSerial } from '../hooks/useDeviceSerial';
@@ -104,7 +105,7 @@ export const DeviceConnection: React.FC = () => {
             onClick={handleRefreshPorts}
             className="w-8 h-8 p-0"
           >
-            <ArrowClockwise size={14} />
+            <RotateCcw size={14} />
           </Button>
         </>
       )}
