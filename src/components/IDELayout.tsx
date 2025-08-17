@@ -5,6 +5,7 @@ import { OutputPanel } from './OutputPanel';
 import { AIAssistant } from './AIAssistant';
 import { TabBar } from './TabBar';
 import { DeviceConnection } from './DeviceConnection';
+import { SerialMonitor } from './SerialMonitor';
 import { useIDEStore } from '../stores/ideStore';
 import { Robot, Sparkle, SidebarSimple } from '@phosphor-icons/react';
 import { Button } from './ui/button';
@@ -120,12 +121,17 @@ export const IDELayout: React.FC = () => {
           )}
         </div>
 
-        {/* AI Assistant */}
-        {isAIVisible && (
-          <div className="w-96 bg-panel-bg border-l border-border flex-shrink-0 h-full overflow-hidden">
-            <AIAssistant />
-          </div>
-        )}
+          {/* Right Panel - AI Assistant & Serial Monitor */}
+          {isAIVisible && (
+            <div className="w-96 border-l border-border flex flex-col">
+              <div className="flex-1">
+                <AIAssistant />
+              </div>
+              <div className="h-80 border-t border-border">
+                <SerialMonitor />
+              </div>
+            </div>
+          )}
       </div>
     </div>
   );

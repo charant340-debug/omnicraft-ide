@@ -1,123 +1,231 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useIDEStore } from '../stores/ideStore';
 import { Button } from './ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Usb } from '@phosphor-icons/react';
-import { RotateCcw } from 'lucide-react';
+import { RotateCcw, Zap } from 'lucide-react';
 import { useToast } from './ui/use-toast';
 import { useElectronSerial } from '../hooks/useElectronSerial';
 import { useDeviceSerial } from '../hooks/useDeviceSerial';
+import { serialManager } from '../utils/serial';
 
 export const DeviceConnection: React.FC = () => {
-  const { isDeviceConnected, deviceType, connectDevice, disconnectDevice } = useIDEStore();
-  const webSerial = useDeviceSerial();
-  const electronSerial = useElectronSerial();
+  const { isDeviceConnected, connectDevice, disconnectDevice, addOutputLog } = useIDEStore();
   const { toast } = useToast();
   const [selectedPort, setSelectedPort] = useState<string>('');
+  const [availablePorts, setAvailablePorts] = useState<any[]>([]);
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [autoConnectAttempted, setAutoConnectAttempted] = useState(false);
 
-  // Use Electron serial when available, fallback to WebSerial
+  // Electron serial hook
+  const electronSerial = useElectronSerial();
+  
+  // Web serial hook  
+  const webSerial = useDeviceSerial();
+
+  // Use the appropriate hook based on environment
   const isElectron = typeof window !== 'undefined' && window.electronAPI;
-  const serialAPI = isElectron ? electronSerial : webSerial;
+  const serial = isElectron ? electronSerial : webSerial;
+
+  // Load available ports on mount and attempt auto-connect
+  useEffect(() => {
+    loadAvailablePorts();
+    if (!autoConnectAttempted) {
+      handleAutoConnect();
+      setAutoConnectAttempted(true);
+    }
+  }, [autoConnectAttempted]);
+
+  const loadAvailablePorts = async () => {
+    try {
+      const ports = await serialManager.listAvailablePorts();
+      setAvailablePorts(ports);
+      
+      // If no port selected but ports available, select first one
+      if (!selectedPort && ports.length > 0) {
+        setSelectedPort(ports[0].path);
+      }
+    } catch (error) {
+      console.error('Failed to load ports:', error);
+      addOutputLog('error', 'Failed to load available ports');
+    }
+  };
+
+  const handleAutoConnect = async () => {
+    if (isDeviceConnected) return;
+    
+    setIsConnecting(true);
+    try {
+      const success = await serialManager.autoConnectToDevice();
+      if (success) {
+        const connectionInfo = serialManager.getConnectionInfo();
+        connectDevice('Auto-detected Device', connectionInfo?.path);
+        addOutputLog('success', `Auto-connected to device: ${connectionInfo?.path}`);
+        toast({
+          title: 'Device Connected',
+          description: 'Automatically connected to available device'
+        });
+      }
+    } catch (error) {
+      console.log('Auto-connect not available:', error);
+    } finally {
+      setIsConnecting(false);
+    }
+  };
 
   const handleConnect = async () => {
-    if (isElectron && !selectedPort) {
+    if (!selectedPort && !isElectron) {
+      // For WebSerial, trigger port selection
+      try {
+        setIsConnecting(true);
+        const success = await serialManager.connectToDevice();
+        if (success) {
+          const connectionInfo = serialManager.getConnectionInfo();
+          connectDevice('ESP32 (WebSerial)', connectionInfo?.path);
+          addOutputLog('success', 'Connected via WebSerial');
+          toast({
+            title: 'Device Connected',
+            description: 'Successfully connected via WebSerial'
+          });
+        }
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Connection failed';
+        addOutputLog('error', `Connection failed: ${errorMessage}`);
+        toast({
+          title: 'Connection Failed',
+          description: errorMessage,
+          variant: 'destructive'
+        });
+      } finally {
+        setIsConnecting(false);
+      }
+      return;
+    }
+
+    if (!selectedPort) {
       toast({
-        title: "Error",
-        description: "Please select a port first",
-        variant: "destructive",
+        title: 'No Port Selected',
+        description: 'Please select a port to connect to',
+        variant: 'destructive'
       });
       return;
     }
 
-    const success = isElectron 
-      ? await serialAPI.connectToDevice(selectedPort, 115200)
-      : await (serialAPI as any).connectToDevice();
-    
-    if (success) {
-      connectDevice(isElectron ? 'ESP32 (USB)' : 'ESP32 (WebSerial)');
+    setIsConnecting(true);
+    try {
+      const success = await serialManager.connectToDevice(selectedPort);
+      if (success) {
+        connectDevice(isElectron ? 'ESP32 (USB)' : 'ESP32 (WebSerial)', selectedPort);
+        addOutputLog('success', `Connected to ${selectedPort}`);
+        toast({
+          title: 'Device Connected',
+          description: `Successfully connected to ${selectedPort}`
+        });
+      } else {
+        throw new Error('Connection failed');
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Connection failed';
+      addOutputLog('error', `Connection failed: ${errorMessage}`);
       toast({
-        title: "Connected",
-        description: `Connected to ${isElectron ? selectedPort : 'device'}`,
+        title: 'Connection Failed',
+        description: errorMessage,
+        variant: 'destructive'
       });
-    } else {
-      toast({
-        title: "Connection Failed",
-        description: "Could not connect to device",
-        variant: "destructive",
-      });
+    } finally {
+      setIsConnecting(false);
     }
   };
 
   const handleDisconnect = async () => {
-    await serialAPI.disconnectFromDevice();
-    disconnectDevice();
-    toast({
-      title: "Disconnected",
-      description: "Device disconnected",
-    });
-  };
-
-  const handleRefreshPorts = () => {
-    if (isElectron) {
-      electronSerial.listPorts();
+    try {
+      await serialManager.disconnectFromDevice();
+      disconnectDevice();
+      addOutputLog('info', 'Device disconnected');
+      toast({
+        title: 'Device Disconnected',
+        description: 'Successfully disconnected from device'
+      });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Disconnect failed';
+      addOutputLog('error', `Disconnect failed: ${errorMessage}`);
     }
   };
 
-  if (serialAPI.isConnected && isDeviceConnected) {
-    return (
-      <div className="flex items-center space-x-3">
-        <div className="flex items-center space-x-2 px-3 py-1.5 bg-success/20 text-success rounded-md">
-          <div className="w-2 h-2 bg-success rounded-full animate-pulse"></div>
-          <Usb size={16} />
-          <span className="text-sm font-medium">{deviceType}</span>
-        </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleDisconnect}
-          className="border-border hover:bg-file-hover"
-        >
-          Disconnect
-        </Button>
-      </div>
-    );
-  }
+  const handleRefreshPorts = async () => {
+    await loadAvailablePorts();
+    toast({
+      title: 'Ports Refreshed',
+      description: `Found ${availablePorts.length} available ports`
+    });
+  };
 
   return (
     <div className="flex items-center space-x-2">
-      {isElectron && (
+      {isDeviceConnected ? (
+        <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2 px-3 py-1.5 bg-success/20 text-success rounded-md">
+            <div className="w-2 h-2 bg-success rounded-full animate-pulse"></div>
+            <Usb size={16} />
+            <span className="text-sm font-medium">Connected</span>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleDisconnect}
+            className="h-8 border-border hover:bg-file-hover"
+          >
+            Disconnect
+          </Button>
+        </div>
+      ) : (
         <>
           <Select value={selectedPort} onValueChange={setSelectedPort}>
-            <SelectTrigger className="w-40 h-8">
-              <SelectValue placeholder="Select Port" />
+            <SelectTrigger className="w-48 h-8">
+              <SelectValue placeholder={availablePorts.length > 0 ? "Select port" : "No ports found"} />
             </SelectTrigger>
             <SelectContent>
-              {electronSerial.availablePorts.map((port) => (
+              {availablePorts.map((port) => (
                 <SelectItem key={port.path} value={port.path}>
                   {port.path} {port.manufacturer && `(${port.manufacturer})`}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
+          
           <Button
+            onClick={handleConnect}
+            disabled={isConnecting}
+            size="sm"
+            className="h-8"
+          >
+            <Usb size={14} className="mr-1" />
+            {isConnecting ? 'Connecting...' : 'Connect'}
+          </Button>
+
+          <Button
+            onClick={handleAutoConnect}
+            disabled={isConnecting}
+            size="sm"
             variant="outline"
+            className="h-8"
+            title="Auto-connect to first available device"
+          >
+            <Zap size={14} className="mr-1" />
+            Auto
+          </Button>
+          
+          <Button
+            variant="ghost"
             size="sm"
             onClick={handleRefreshPorts}
             className="w-8 h-8 p-0"
+            title="Refresh ports"
           >
             <RotateCcw size={14} />
           </Button>
         </>
       )}
-      <Button
-        onClick={handleConnect}
-        disabled={serialAPI.isConnecting || (isElectron && !selectedPort)}
-        className="bg-primary hover:bg-primary-glow text-primary-foreground shadow-glow"
-        size="sm"
-      >
-        <Usb size={16} className="mr-2" />
-        {serialAPI.isConnecting ? 'Connecting...' : 'Connect Device'}
-      </Button>
     </div>
   );
 };

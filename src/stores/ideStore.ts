@@ -39,6 +39,9 @@ export interface IDEState {
   // Device connection
   isDeviceConnected: boolean;
   deviceType: string | null;
+  connectedDevicePath: string | null;
+  serialData: string;
+  lastCommand: string;
   
   // AI assistant
   isAIVisible: boolean;
@@ -58,8 +61,11 @@ export interface IDEState {
   toggleOutput: () => void;
   addOutputLog: (type: 'info' | 'error' | 'success', message: string) => void;
   clearOutputLogs: () => void;
-  connectDevice: (deviceType: string) => void;
+  connectDevice: (deviceType: string, devicePath?: string) => void;
   disconnectDevice: () => void;
+  addSerialData: (data: string) => void;
+  clearSerialData: () => void;
+  setLastCommand: (command: string) => void;
   toggleAI: () => void;
   addAIMessage: (role: 'user' | 'assistant', content: string, options?: { hasCodeSuggestion?: boolean; codeSuggestion?: string; targetFile?: string }) => void;
   clearAIMessages: () => void;
@@ -157,6 +163,9 @@ export const useIDEStore = create<IDEState>((set, get) => ({
   outputLogs: [],
   isDeviceConnected: false,
   deviceType: null,
+  connectedDevicePath: null,
+  serialData: '',
+  lastCommand: '',
   isAIVisible: true,
   aiMessages: [],
 
@@ -313,15 +322,25 @@ export const useIDEStore = create<IDEState>((set, get) => ({
 
   clearOutputLogs: () => set({ outputLogs: [] }),
 
-  connectDevice: (deviceType) => set({ 
+  connectDevice: (deviceType, devicePath) => set({ 
     isDeviceConnected: true, 
-    deviceType 
+    deviceType,
+    connectedDevicePath: devicePath || null
   }),
 
   disconnectDevice: () => set({ 
     isDeviceConnected: false, 
-    deviceType: null 
+    deviceType: null,
+    connectedDevicePath: null
   }),
+
+  addSerialData: (data) => set(state => ({
+    serialData: state.serialData + data
+  })),
+
+  clearSerialData: () => set({ serialData: '' }),
+
+  setLastCommand: (command) => set({ lastCommand: command }),
 
   toggleAI: () => set(state => ({ 
     isAIVisible: !state.isAIVisible 
